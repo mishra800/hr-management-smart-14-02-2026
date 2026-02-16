@@ -1,0 +1,82 @@
+version: '3.8'
+
+# Development Docker Compose Configuration
+# Use: docker-compose -f docker-compose.dev.yml up
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: hr_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hr_management_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - hr_network_dev
+
+  # Backend API (Development with hot reload)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hr_backend_dev
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/hr_management_dev
+      SECRET_KEY: dev-secret-key-not-for-production
+      DEBUG: "True"
+      ENVIRONMENT: development
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:5174
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - postgres
+    networks:
+      - hr_network_dev
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend (Development with hot reload)
+  frontend:
+    image: node:20.19.0-alpine
+    container_name: hr_frontend_dev
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - hr_network_dev
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: hr_redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - hr_network_dev
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
+networks:
+  hr_network_dev:
+    driver: bridge

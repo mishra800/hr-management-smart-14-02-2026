@@ -1,4 +1,7 @@
-# Use Python 3.13 slim image for production
+# Dockerfile with ALL dependencies including AI/ML features
+# Use this if you need face recognition, ML models, etc.
+# Build: docker build -f Dockerfile.full -t hr-backend-full .
+
 FROM python:3.13-slim
 
 # Set environment variables
@@ -7,20 +10,36 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies
+# Install system dependencies for ML/AI features
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    cmake \
     curl \
+    libopenblas-dev \
+    liblapack-dev \
+    libx11-dev \
+    libgtk-3-dev \
+    libboost-python-dev \
+    libboost-system-dev \
+    libboost-filesystem-dev \
+    pkg-config \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first for better caching
+# Copy requirements
 COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Optional: Install additional AI/ML packages if needed
+# RUN pip install --no-cache-dir textblob scikit-learn pandas numpy face-recognition opencv-python
+
+# Download spaCy model (if using NLP features)
+# RUN python -m spacy download en_core_web_sm
 
 # Copy application code
 COPY . .
@@ -28,7 +47,7 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p uploads logs
 
-# Create non-root user for security
+# Create non-root user
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
 
