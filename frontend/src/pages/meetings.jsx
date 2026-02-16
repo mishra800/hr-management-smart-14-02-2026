@@ -83,7 +83,7 @@ export default function Meetings() {
       if (view === 'upcoming') {
         endpoint = '/meetings/upcoming';
       } else if (view === 'completed') {
-        endpoint = '/meetings/?status=completed';
+        endpoint = '/meetings/past';
       }
       
       const response = await api.get(endpoint);
@@ -91,6 +91,8 @@ export default function Meetings() {
     } catch (error) {
       console.error('Error fetching meetings:', error);
       showToast('Failed to load meetings', 'error');
+      // Set empty array on error to show empty state
+      setMeetings([]);
     } finally {
       setLoading(false);
     }
@@ -498,8 +500,14 @@ export default function Meetings() {
             <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p className="text-lg font-medium">No {view} meetings</p>
-            <p className="text-sm">Schedule your first meeting to get started</p>
+            <p className="text-lg font-medium">
+              {view === 'upcoming' ? 'No upcoming meetings' : 'No past meetings'}
+            </p>
+            <p className="text-sm">
+              {view === 'upcoming' 
+                ? 'Schedule your first meeting to get started' 
+                : 'Past meetings will appear here once completed'}
+            </p>
           </div>
         )}
       </div>

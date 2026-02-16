@@ -44,6 +44,7 @@ def get_employees(current_user: dict = Depends(get_current_user)):
                     u.role
                 FROM employees e
                 LEFT JOIN users u ON e.user_id = u.id
+                WHERE e.status = 'active'
                 ORDER BY e.created_at DESC
             """)
             
@@ -442,29 +443,39 @@ def delete_employee(employee_id: int, current_user: dict = Depends(get_current_u
     
     try:
         with engine.connect() as conn:
-            # Check if employee exists
-            check_query = text("SELECT id FROM employees WHERE id = :employee_id")
+            # Check if employee exists and get current status
+            check_query = text("SELECT id, status, first_name, last_name FROM employees WHERE id = :employee_id")
             result = conn.execute(check_query, {"employee_id": employee_id})
-            if not result.fetchone():
+            employee = result.fetchone()
+            
+            if not employee:
                 raise HTTPException(status_code=404, detail="Employee not found")
             
-            # Delete employee (or mark as inactive)
+            print(f"Deleting employee: ID={employee[0]}, Name={employee[2]} {employee[3]}, Current Status={employee[1]}")
+            
+            # Delete employee (mark as inactive)
             delete_query = text("""
                 UPDATE employees
                 SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
                 WHERE id = :employee_id
+                RETURNING id, status
             """)
             
-            conn.execute(delete_query, {"employee_id": employee_id})
+            result = conn.execute(delete_query, {"employee_id": employee_id})
+            updated = result.fetchone()
             conn.commit()
+            
+            print(f"Employee deleted: ID={updated[0]}, New Status={updated[1]}")
             
             return schemas.APIResponse(
                 success=True,
-                message="Employee deleted successfully"
+                message="Employee deleted successfully",
+                data={"id": updated[0], "status": updated[1]}
             )
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error deleting employee: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to delete employee: {str(e)}")
 @router.put("/me/profile")
 def update_my_profile(profile_update: schemas.EmployeeUpdate, current_user: dict = Depends(get_current_user)):

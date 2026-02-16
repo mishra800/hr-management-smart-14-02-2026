@@ -31,7 +31,7 @@ import SuperAdmin from './pages/superadmin';
 import Help from './pages/Help';
 import Notifications from './pages/Notifications';
 import Settings from './pages/settings';
-import BirthdayAnniversaryDemoPage from './pages/BirthdayAnniversaryDemo';
+
 import { AuthProvider } from './context/authcontext';
 
 // Import enhanced components directly
@@ -52,7 +52,6 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/ai-interview/:applicationId" element={<AIInterview />} />
-            <Route path="/birthday-anniversary-demo" element={<BirthdayAnniversaryDemoPage />} />
 
             {/* Protected Routes */}
             <Route path="/dashboard" element={

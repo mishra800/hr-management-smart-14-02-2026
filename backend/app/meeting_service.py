@@ -121,6 +121,21 @@ class MeetingService:
             )
         ).order_by(models.Meeting.meeting_date, models.Meeting.start_time).all()
 
+    def get_past_meetings(self, user_id: int, days_back: int = 30) -> List[models.Meeting]:
+        """Get past/completed meetings for a user"""
+        start_date = date.today() - timedelta(days=days_back)
+        
+        return self.db.query(models.Meeting).filter(
+            and_(
+                models.Meeting.meeting_date < date.today(),
+                models.Meeting.meeting_date >= start_date,
+                or_(
+                    models.Meeting.created_by == user_id,
+                    models.Meeting.attendees.any(models.MeetingAttendee.user_id == user_id)
+                )
+            )
+        ).order_by(models.Meeting.meeting_date.desc(), models.Meeting.start_time.desc()).all()
+
     def check_conflicts(self, user_id: int, meeting_date: date, start_time: time, end_time: time, exclude_meeting_id: int = None) -> List[models.Meeting]:
         """Check for meeting conflicts for a user"""
         query = self.db.query(models.Meeting).filter(

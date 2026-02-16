@@ -50,9 +50,10 @@ export default function SuperAdmin() {
   const fetchPermissionTemplates = async () => {
     try {
       const response = await api.get('/admin/permission-templates');
-      setPermissionTemplates(response.data);
+      setPermissionTemplates(response.data.templates || response.data || {});
     } catch (error) {
       console.error('Error fetching permission templates:', error);
+      setPermissionTemplates({});
     }
   };
 
@@ -60,7 +61,7 @@ export default function SuperAdmin() {
     try {
       setLoading(true);
       const response = await api.get('/admin/capabilities');
-      setCapabilities(response.data);
+      setCapabilities(response.data.capabilities || response.data || {});
     } catch (error) {
       console.error('Error fetching capabilities:', error);
       // Initialize with default capabilities if API fails
@@ -160,26 +161,36 @@ export default function SuperAdmin() {
       // Validate capabilities before sending
       if (!capabilities || Object.keys(capabilities).length === 0) {
         alert('⚠️ No capabilities to save. Please configure at least one role.');
+        setSaving(false);
         return;
       }
       
       console.log('Saving capabilities...', capabilities);
+      console.log('Capabilities structure:', JSON.stringify(capabilities, null, 2));
       
       // Send request
       const response = await api.post('/admin/capabilities', { 
         capabilities: capabilities 
       });
       
+      console.log('Save response:', response);
       console.log('Save successful:', response.data);
       
-      // Show success message
-      alert('✅ Capabilities saved successfully!');
+      // Show success message with details
+      const message = response.data?.message || 'Capabilities saved successfully!';
+      const updatedRoles = response.data?.updated_roles?.length || 0;
+      alert(`✅ ${message}\n\nUpdated ${updatedRoles} roles.`);
       
-      // Optionally refresh capabilities from server
+      // Refresh capabilities from server to confirm changes
       await fetchCapabilities();
       
     } catch (error) {
       console.error('Error saving capabilities:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        request: error.request
+      });
       
       // Extract error message
       let errorMessage = 'Failed to save capabilities. Please try again.';
@@ -188,6 +199,9 @@ export default function SuperAdmin() {
         // Server responded with error
         const status = error.response.status;
         const data = error.response.data;
+        
+        console.error('Response status:', status);
+        console.error('Response data:', data);
         
         if (status === 403) {
           errorMessage = '🔒 Permission denied. Only super admins can save capabilities.';
@@ -200,9 +214,6 @@ export default function SuperAdmin() {
         } else if (data?.message) {
           errorMessage = data.message;
         }
-        
-        console.error('Response status:', status);
-        console.error('Response data:', data);
       } else if (error.request) {
         // Request made but no response
         errorMessage = '🌐 No response from server. Please check if backend is running.';
@@ -231,9 +242,10 @@ export default function SuperAdmin() {
   const fetchUserStats = async () => {
     try {
       const response = await api.get('/admin/users/stats');
-      setUserStats(response.data);
+      setUserStats(response.data || null);
     } catch (error) {
       console.error('Error fetching user stats:', error);
+      setUserStats(null);
     }
   };
 
@@ -444,9 +456,21 @@ export default function SuperAdmin() {
             {ROLES.map(role => {
               const isAdminRole = role.id === 'admin' || role.id === 'super_admin';
               
+              // Map role colors to actual Tailwind classes
+              const colorClasses = {
+                red: 'bg-red-500',
+                purple: 'bg-purple-500',
+                blue: 'bg-blue-500',
+                green: 'bg-green-500',
+                orange: 'bg-orange-500',
+                yellow: 'bg-yellow-500'
+              };
+              
+              const headerColorClass = colorClasses[role.color] || 'bg-gray-500';
+              
               return (
               <div key={role.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className={`bg-${role.color}-500 px-6 py-4 flex items-center justify-between`}>
+                <div className={`${headerColorClass} px-6 py-4 flex items-center justify-between`}>
                   <div>
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                       {role.name}

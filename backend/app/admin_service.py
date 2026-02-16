@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, desc, func
-from . import models_v2 as models  # Use SQLAlchemy models
+from . import models  # Consolidated SQLAlchemy ORM models
 from .notification_service import NotificationService
 import json
 import logging
@@ -58,9 +58,12 @@ class AdminService:
     def save_system_capabilities(self, capabilities: Dict[str, Any], updated_by: int) -> Dict[str, Any]:
         """Save system capabilities with audit logging"""
         try:
+            logger.info(f"Saving capabilities for {len(capabilities)} roles by user {updated_by}")
+            
             # Validate capabilities structure
             validation_result = self._validate_capabilities(capabilities)
             if not validation_result["valid"]:
+                logger.error(f"Validation failed: {validation_result['message']}")
                 return {"success": False, "message": validation_result["message"]}
             
             # Get old capabilities for audit
@@ -83,6 +86,8 @@ class AdminService:
             # Notify relevant users about capability changes
             self._notify_capability_changes(capabilities, old_capabilities, updated_by)
             
+            logger.info(f"Capabilities saved successfully for {len(capabilities)} roles")
+            
             return {
                 "success": True,
                 "message": "Capabilities saved successfully",
@@ -91,7 +96,7 @@ class AdminService:
             }
             
         except Exception as e:
-            logger.error(f"Error saving capabilities: {e}")
+            logger.error(f"Error saving capabilities: {e}", exc_info=True)
             return {"success": False, "message": f"Failed to save capabilities: {str(e)}"}
     
     def get_role_capabilities(self, role: str) -> Dict[str, Any]:
@@ -354,20 +359,29 @@ class AdminService:
             
             logs_data = []
             for log in logs:
+                # Safely convert JSONB to string
+                old_value_str = None
+                if log.old_values:
+                    old_value_str = json.dumps(log.old_values) if isinstance(log.old_values, (dict, list)) else str(log.old_values)
+                
+                new_value_str = None
+                if log.new_values:
+                    new_value_str = json.dumps(log.new_values) if isinstance(log.new_values, (dict, list)) else str(log.new_values)
+                
                 logs_data.append({
                     "id": log.id,
                     "user_id": log.user_id,
                     "user_email": log.user.email if log.user else "Unknown",
                     "action": log.action,
-                    "resource_type": log.resource_type,
-                    "resource_id": log.resource_id,
-                    "old_value": log.old_value,
-                    "new_value": log.new_value,
+                    "resource_type": log.table_name or "unknown",  # Use table_name with default
+                    "resource_id": log.record_id if log.record_id is not None else 0,  # Use record_id with default
+                    "old_value": old_value_str,
+                    "new_value": new_value_str,
                     "ip_address": log.ip_address,
                     "user_agent": log.user_agent,
                     "created_at": log.created_at.isoformat(),
                     "risk_level": self._assess_action_risk(log.action),
-                    "details": getattr(log, 'details', '')
+                    "details": ""  # Details field doesn't exist in schema
                 })
             
             return {
@@ -495,14 +509,85 @@ class AdminService:
     # ==================== PRIVATE HELPER METHODS ====================
     
     def _get_capabilities_from_db(self) -> Optional[Dict[str, Any]]:
-        """Get capabilities from database (placeholder for future implementation)"""
-        # In production, implement database storage for capabilities
-        return None
+        """Get capabilities from database using raw SQL to avoid mapper conflicts"""
+        try:
+            # Use raw SQL to avoid triggering mapper initialization
+            from sqlalchemy import text
+            
+            query = text("""
+                SELECT setting_value 
+                FROM system_settings 
+                WHERE setting_key = 'role_capabilities' 
+                AND is_active = true
+                LIMIT 1
+            """)
+            
+            result = self.db.execute(query).fetchone()
+            
+            if result and result[0]:
+                return json.loads(result[0])
+            
+            return None
+        except Exception as e:
+            logger.error(f"Error getting capabilities from database: {e}")
+            return None
     
     def _save_capabilities_to_db(self, capabilities: Dict[str, Any], updated_by: int):
-        """Save capabilities to database (placeholder for future implementation)"""
-        # In production, implement database storage for capabilities
-        pass
+        """Save capabilities to database using raw SQL to avoid mapper conflicts"""
+        try:
+            from sqlalchemy import text
+            from datetime import datetime
+            
+            capabilities_json = json.dumps(capabilities)
+            now = datetime.utcnow()
+            
+            # Check if setting exists
+            check_query = text("""
+                SELECT id FROM system_settings 
+                WHERE setting_key = 'role_capabilities'
+            """)
+            
+            existing = self.db.execute(check_query).fetchone()
+            
+            if existing:
+                # Update existing setting
+                update_query = text("""
+                    UPDATE system_settings 
+                    SET setting_value = :value, 
+                        updated_at = :updated_at
+                    WHERE setting_key = 'role_capabilities'
+                """)
+                
+                self.db.execute(update_query, {
+                    'value': capabilities_json,
+                    'updated_at': now
+                })
+            else:
+                # Insert new setting
+                insert_query = text("""
+                    INSERT INTO system_settings 
+                    (setting_key, setting_value, description, category, is_active, created_at, updated_at)
+                    VALUES 
+                    (:key, :value, :description, :category, :is_active, :created_at, :updated_at)
+                """)
+                
+                self.db.execute(insert_query, {
+                    'key': 'role_capabilities',
+                    'value': capabilities_json,
+                    'description': 'Role-based module capabilities and permissions',
+                    'category': 'security',
+                    'is_active': True,
+                    'created_at': now,
+                    'updated_at': now
+                })
+            
+            self.db.commit()
+            logger.info(f"Capabilities saved to database by user {updated_by}")
+            
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error saving capabilities to database: {e}")
+            raise
     
     def _get_default_capabilities(self) -> Dict[str, Any]:
         """Get default system capabilities"""
@@ -580,29 +665,36 @@ class AdminService:
     def _create_audit_log(self, user_id: int, action: str, resource_type: str, 
                          resource_id: int, old_value: str = None, new_value: str = None,
                          ip_address: str = None, user_agent: str = None, details: str = None) -> bool:
-        """Create audit log entry"""
+        """Create audit log entry using raw SQL to avoid mapper conflicts"""
         try:
-            audit_log = models.AuditLog(
-                user_id=user_id,
-                action=action,
-                resource_type=resource_type,
-                resource_id=resource_id,
-                old_value=old_value,
-                new_value=new_value,
-                ip_address=ip_address,
-                user_agent=user_agent
-            )
+            from sqlalchemy import text
+            from datetime import datetime
             
-            # Add details if provided (assuming the model supports it)
-            if hasattr(audit_log, 'details') and details:
-                audit_log.details = details
+            query = text("""
+                INSERT INTO audit_logs 
+                (user_id, action, table_name, record_id, old_values, new_values, ip_address, user_agent, created_at)
+                VALUES 
+                (:user_id, :action, :table_name, :record_id, :old_values, :new_values, :ip_address, :user_agent, :created_at)
+            """)
             
-            self.db.add(audit_log)
+            self.db.execute(query, {
+                'user_id': user_id,
+                'action': action,
+                'table_name': resource_type,
+                'record_id': resource_id,
+                'old_values': old_value,
+                'new_values': new_value,
+                'ip_address': ip_address,
+                'user_agent': user_agent,
+                'created_at': datetime.utcnow()
+            })
+            
             self.db.commit()
             return True
             
         except Exception as e:
             logger.error(f"Error creating audit log: {e}")
+            # Don't fail the main operation if audit logging fails
             return False
     
     def _assess_action_risk(self, action: str) -> str:

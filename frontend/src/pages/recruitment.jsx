@@ -146,9 +146,17 @@ export default function Recruitment() {
   const fetchJobs = async () => {
     try {
       const response = await api.get('/recruitment/jobs/');
-      setJobs(response.data);
+      // Handle both response formats: direct array or nested data object
+      if (response.data.success && response.data.data) {
+        setJobs(response.data.data.jobs || []);
+      } else if (Array.isArray(response.data)) {
+        setJobs(response.data);
+      } else {
+        setJobs([]);
+      }
     } catch (error) {
       console.error('Error fetching jobs:', error);
+      setJobs([]); // Set empty array on error to show empty state
     }
   };
 
@@ -872,7 +880,7 @@ export default function Recruitment() {
               </div>
 
               <div className="flex justify-end pt-4">
-                <button type="submit" className="bg-primary text-white px-6 py-2 rounded-md shadow-sm hover:bg-blue-600 font-medium">
+                <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-md shadow-sm hover:bg-blue-700 font-medium transition-colors">
                   Create Requisition & Send for Approval
                 </button>
               </div>
@@ -883,7 +891,8 @@ export default function Recruitment() {
         {/* ACTIVE PIPELINES (Management) */}
         {activeTab === 'jobs' && (
           <div className="space-y-8">
-            {jobs.map(job => (
+            {jobs && jobs.length > 0 ? (
+              jobs.map(job => (
               <div key={job.id} className="border border-gray-200 rounded-lg overflow-hidden">
                 <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                   <div>
@@ -1218,7 +1227,27 @@ export default function Recruitment() {
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            ) : (
+              <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No job requisitions</h3>
+                <p className="mt-1 text-sm text-gray-500">Get started by creating a new job requisition.</p>
+                <div className="mt-6">
+                  <button
+                    onClick={() => setActiveTab('create')}
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Requisition
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

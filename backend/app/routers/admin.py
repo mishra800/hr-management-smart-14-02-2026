@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 from datetime import datetime
 from app import database
-from app import models_v2 as models  # Use SQLAlchemy models
+from app import models  # Consolidated SQLAlchemy ORM models
 from app.dependencies import get_current_user
 from app.admin_service import AdminService
 from app.role_utils import require_roles

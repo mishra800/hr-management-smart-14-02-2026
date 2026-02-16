@@ -149,10 +149,13 @@ export default function Employees() {
     e.preventDefault();
     try {
       if (isEditing) {
-        await api.put(`/employees/${currentEmployeeId}`, newEmployee);
-        alert('Employee updated successfully!');
-        closeModal();
-        fetchEmployees();
+        const response = await api.put(`/employees/${currentEmployeeId}`, newEmployee);
+        
+        if (response.data.success) {
+          alert('✅ Employee updated successfully!');
+          closeModal();
+          fetchEmployees(); // Refresh the list
+        }
       } else {
         // Use the new endpoint that creates both user and employee
         const response = await api.post('/employees/create-with-account', {
@@ -169,23 +172,47 @@ export default function Employees() {
           role: newEmployee.role || 'employee'
         });
         
-        // Show credentials to admin - DON'T close modal yet
-        setGeneratedCredentials(response.data.login_credentials);
+        // Close the form modal first
+        setShowModal(false);
+        
+        // Show credentials in success modal
+        setGeneratedCredentials(response.data.data.login_credentials);
+        
+        // Refresh employee list
         fetchEmployees();
       }
     } catch (error) {
       console.error('Error saving employee:', error);
-      alert(error.response?.data?.detail || 'Failed to save employee.');
+      alert(error.response?.data?.detail || '❌ Failed to save employee. Please try again.');
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this employee?')) return;
+    console.log('Delete button clicked for employee ID:', id);
+    
+    if (!window.confirm('Are you sure you want to delete this employee? This will mark them as inactive.')) {
+      console.log('Delete cancelled by user');
+      return;
+    }
+    
     try {
-      await api.delete(`/employees/${id}`);
-      fetchEmployees();
+      console.log('Sending delete request to:', `/employees/${id}`);
+      const response = await api.delete(`/employees/${id}`);
+      console.log('Delete response:', response.data);
+      
+      if (response.data.success) {
+        alert('✅ Employee deleted successfully!');
+        console.log('Refreshing employee list...');
+        await fetchEmployees(); // Refresh the list
+        console.log('Employee list refreshed');
+      } else {
+        console.error('Delete failed:', response.data);
+        alert('❌ Failed to delete employee: ' + (response.data.message || 'Unknown error'));
+      }
     } catch (error) {
       console.error('Error deleting employee:', error);
+      console.error('Error response:', error.response);
+      alert(error.response?.data?.detail || '❌ Failed to delete employee. Please try again.');
     }
   };
 
@@ -665,12 +692,99 @@ export default function Employees() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
                   {isEditing ? 'Update Employee' : 'Create Employee'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal - Show Credentials */}
+      {generatedCredentials && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+            <div className="text-center mb-6">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Employee Created Successfully!
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Please save these login credentials. They will not be shown again.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Email / Username</label>
+                  <div className="flex items-center justify-between bg-white border border-gray-300 rounded px-3 py-2">
+                    <span className="text-sm font-mono text-gray-900">{generatedCredentials.email}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedCredentials.email);
+                        alert('Email copied to clipboard!');
+                      }}
+                      className="text-blue-600 hover:text-blue-700 text-xs font-medium"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+                  <div className="flex items-center justify-between bg-white border border-gray-300 rounded px-3 py-2">
+                    <span className="text-sm font-mono text-gray-900">{generatedCredentials.password}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedCredentials.password);
+                        alert('Password copied to clipboard!');
+                      }}
+                      className="text-blue-600 hover:text-blue-700 text-xs font-medium"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+              <div className="flex">
+                <svg className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <p className="text-xs text-yellow-800">
+                  <strong>Important:</strong> Make sure to save these credentials securely. The employee will need them to log in.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  const text = `Login Credentials\n\nEmail: ${generatedCredentials.email}\nPassword: ${generatedCredentials.password}`;
+                  navigator.clipboard.writeText(text);
+                  alert('All credentials copied to clipboard!');
+                }}
+                className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                Copy All
+              </button>
+              <button
+                onClick={closeModal}
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime
 from typing import Dict, List, Optional
 from sqlalchemy.orm import Session, joinedload
-from . import models_v2 as models
+from . import models  # Consolidated SQLAlchemy ORM models
 from .notification_service import NotificationService
 
 

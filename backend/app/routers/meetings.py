@@ -62,6 +62,15 @@ def get_upcoming_meetings(
     """Get upcoming meetings for the current user"""
     return meeting_service.get_upcoming_meetings(current_user.id, days_ahead)
 
+@router.get("/past", response_model=List[schemas.MeetingOut])
+def get_past_meetings(
+    days_back: int = Query(30, ge=1, le=365),
+    current_user: models.User = Depends(require_role(["admin", "hr", "manager", "employee"])),
+    meeting_service: MeetingService = Depends(get_meeting_service)
+):
+    """Get past/completed meetings for the current user"""
+    return meeting_service.get_past_meetings(current_user.id, days_back)
+
 @router.get("/analytics")
 def get_meeting_analytics(
     date_from: Optional[date] = None,

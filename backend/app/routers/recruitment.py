@@ -50,16 +50,18 @@ class JobCreate(BaseModel):
     title: str
     department: str
     location: str
-    job_type: str  # full_time, part_time, contract, internship
-    experience_level: str  # entry, mid, senior, executive
     description: str
-    requirements: List[str]
-    responsibilities: List[str]
+    job_type: Optional[str] = "full_time"  # full_time, part_time, contract, internship
+    experience_level: Optional[str] = "mid"  # entry, mid, senior, executive
+    requirements: Optional[List[str]] = []
+    responsibilities: Optional[List[str]] = []
     salary_min: Optional[float] = None
     salary_max: Optional[float] = None
     benefits: Optional[List[str]] = None
     application_deadline: Optional[datetime] = None
     remote_allowed: bool = False
+    workflow_mode: Optional[str] = "flexible"
+    requisition_status: Optional[str] = "pending_approval"
 
 class JobUpdate(BaseModel):
     title: Optional[str] = None
@@ -115,6 +117,7 @@ def generate_id():
     return len(MOCK_JOBS) + len(MOCK_APPLICATIONS) + len(MOCK_INTERVIEWS) + 1
 
 @router.get("/jobs")
+@router.get("/jobs/")
 async def get_jobs(
     current_user: dict = Depends(get_current_user),
     skip: int = Query(0, ge=0),
@@ -172,6 +175,17 @@ async def get_jobs(
             
             jobs = []
             for row in rows:
+                # Safely parse JSON fields
+                try:
+                    required_skills = json.loads(row[21]) if row[21] and isinstance(row[21], str) else (row[21] if isinstance(row[21], list) else [])
+                except (json.JSONDecodeError, TypeError):
+                    required_skills = []
+                
+                try:
+                    requirements = json.loads(row[6]) if row[6] and isinstance(row[6], str) else (row[6] if isinstance(row[6], list) else None)
+                except (json.JSONDecodeError, TypeError):
+                    requirements = row[6]
+                
                 jobs.append({
                     "id": row[0],
                     "title": row[1],
@@ -179,7 +193,7 @@ async def get_jobs(
                     "location": row[3],
                     "employment_type": row[4],
                     "description": row[5],
-                    "requirements": row[6],
+                    "requirements": requirements,
                     "salary_min": float(row[7]) if row[7] else None,
                     "salary_max": float(row[8]) if row[8] else None,
                     "status": row[9],
@@ -194,7 +208,7 @@ async def get_jobs(
                     "allow_linkedin_apply": row[18],
                     "allow_bulk_upload": row[19],
                     "blind_hiring_enabled": row[20],
-                    "required_skills": json.loads(row[21]) if row[21] else [],
+                    "required_skills": required_skills,
                     "min_experience_years": row[22],
                     "max_experience_years": row[23],
                     "remote_allowed": row[24],
@@ -220,51 +234,297 @@ async def get_jobs(
         raise HTTPException(status_code=500, detail=f"Failed to fetch jobs: {str(e)}")
 
 @router.post("/jobs")
+@router.post("/jobs/")
 async def create_job(
     job: JobCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    """Create new job posting"""
+    """Create new job posting in database"""
     check_user_permissions(current_user.get("role"), ["admin", "super_admin", "hr"])
     
-    job_id = generate_id()
+    try:
+        with engine.connect() as conn:
+            # Get employee_id for the current user
+            # First try to get from users table
+            user_query = text("SELECT employee_id FROM users WHERE id = :user_id")
+            user_result = conn.execute(user_query, {"user_id": current_user.get("id")})
+            user_row = user_result.fetchone()
+            employee_id = user_row[0] if user_row and user_row[0] else None
+            
+            # If no employee_id in users table, try to find employee by email
+            if not employee_id:
+                email_query = text("SELECT id FROM employees WHERE email = :email LIMIT 1")
+                email_result = conn.execute(email_query, {"email": current_user.get("email")})
+                email_row = email_result.fetchone()
+                employee_id = email_row[0] if email_row else None
+            
+            # If still no employee_id, create a basic employee record
+            if not employee_id:
+                create_emp_query = text("""
+                    INSERT INTO employees (first_name, last_name, email, department, position, status)
+                    VALUES (:first_name, :last_name, :email, :department, :position, 'active')
+                    RETURNING id
+                """)
+                emp_result = conn.execute(create_emp_query, {
+                    "first_name": current_user.get("email", "").split("@")[0],
+                    "last_name": "User",
+                    "email": current_user.get("email"),
+                    "department": job.department or "HR",
+                    "position": "HR Manager"
+                })
+                employee_id = emp_result.fetchone()[0]
+                
+                # Update users table with new employee_id
+                update_user_query = text("UPDATE users SET employee_id = :employee_id WHERE id = :user_id")
+                conn.execute(update_user_query, {"employee_id": employee_id, "user_id": current_user.get("id")})
+            
+            # Convert lists to JSON strings for database storage
+            requirements_str = json.dumps(job.requirements) if job.requirements else None
+            
+            # Insert into database
+            insert_query = text("""
+                INSERT INTO job_postings (
+                    title, department, location, employment_type, description, 
+                    requirements, salary_min, salary_max, status, posted_by,
+                    workflow_mode, requisition_status, remote_allowed,
+                    posted_date, current_step
+                )
+                VALUES (
+                    :title, :department, :location, :job_type, :description,
+                    :requirements, :salary_min, :salary_max, :status, :posted_by,
+                    :workflow_mode, :requisition_status, :remote_allowed,
+                    CURRENT_DATE, :current_step
+                )
+                RETURNING id, title, department, location, employment_type, description,
+                          requirements, salary_min, salary_max, status, posted_by,
+                          posted_date, workflow_mode, current_step, requisition_status,
+                          remote_allowed, created_at
+            """)
+            
+            result = conn.execute(insert_query, {
+                "title": job.title,
+                "department": job.department,
+                "location": job.location,
+                "job_type": job.job_type,
+                "description": job.description,
+                "requirements": requirements_str,
+                "salary_min": job.salary_min,
+                "salary_max": job.salary_max,
+                "status": job.requisition_status if job.requisition_status == "pending_approval" else "draft",
+                "posted_by": employee_id,
+                "workflow_mode": job.workflow_mode,
+                "requisition_status": job.requisition_status,
+                "remote_allowed": job.remote_allowed,
+                "current_step": 0
+            })
+            
+            conn.commit()
+            
+            row = result.fetchone()
+            
+            new_job = {
+                "id": row[0],
+                "title": row[1],
+                "department": row[2],
+                "location": row[3],
+                "employment_type": row[4],
+                "description": row[5],
+                "requirements": row[6],
+                "salary_min": float(row[7]) if row[7] else None,
+                "salary_max": float(row[8]) if row[8] else None,
+                "status": row[9],
+                "posted_by": row[10],
+                "posted_date": str(row[11]) if row[11] else None,
+                "workflow_mode": row[12],
+                "current_step": row[13],
+                "requisition_status": row[14],
+                "remote_allowed": row[15],
+                "created_at": str(row[16]) if row[16] else None
+            }
+            
+            log_user_action(
+                current_user.get("id"),
+                "create_job",
+                "job",
+                {"job_id": new_job["id"], "title": job.title}
+            )
+            
+            return {
+                "success": True,
+                "message": "Job created successfully",
+                "data": new_job
+            }
+    except ValidationError as ve:
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(ve)}")
+    except Exception as e:
+        import traceback
+        error_detail = f"Failed to create job: {str(e)}\n{traceback.format_exc()}"
+        print(error_detail)  # Log to console for debugging
+        raise HTTPException(status_code=500, detail=f"Failed to create job: {str(e)}")
+
+@router.patch("/jobs/{job_id}/approve")
+async def approve_job(
+    job_id: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """Approve job requisition and make it active"""
+    check_user_permissions(current_user.get("role"), ["admin", "super_admin", "hr", "manager"])
     
-    new_job = {
-        "id": job_id,
-        "title": job.title,
-        "department": job.department,
-        "location": job.location,
-        "job_type": job.job_type,
-        "experience_level": job.experience_level,
-        "description": job.description,
-        "requirements": job.requirements,
-        "responsibilities": job.responsibilities,
-        "salary_min": job.salary_min,
-        "salary_max": job.salary_max,
-        "benefits": job.benefits or [],
-        "application_deadline": job.application_deadline.isoformat() if job.application_deadline else None,
-        "remote_allowed": job.remote_allowed,
-        "status": JobStatus.DRAFT,
-        "created_by": current_user.get("id"),
-        "created_at": datetime.now().isoformat(),
-        "applications_count": 0,
-        "views_count": 0
-    }
+    try:
+        with engine.connect() as conn:
+            # Update job status to approved and active
+            update_query = text("""
+                UPDATE job_postings 
+                SET requisition_status = 'approved',
+                    status = 'active',
+                    current_step = 1,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = :job_id
+                RETURNING id, title, requisition_status, status, current_step
+            """)
+            
+            result = conn.execute(update_query, {"job_id": job_id})
+            conn.commit()
+            
+            row = result.fetchone()
+            
+            if not row:
+                raise HTTPException(status_code=404, detail="Job not found")
+            
+            log_user_action(
+                current_user.get("id"),
+                "approve_job",
+                "job",
+                {"job_id": job_id, "title": row[1]}
+            )
+            
+            return {
+                "success": True,
+                "message": f"Job '{row[1]}' approved successfully",
+                "data": {
+                    "id": row[0],
+                    "title": row[1],
+                    "requisition_status": row[2],
+                    "status": row[3],
+                    "current_step": row[4]
+                }
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to approve job: {str(e)}")
+
+@router.patch("/jobs/{job_id}/advance")
+async def advance_job_step(
+    job_id: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """Advance job to next workflow step"""
+    check_user_permissions(current_user.get("role"), ["admin", "super_admin", "hr", "manager"])
     
-    MOCK_JOBS[job_id] = new_job
+    try:
+        with engine.connect() as conn:
+            # Get current step
+            select_query = text("SELECT current_step FROM job_postings WHERE id = :job_id")
+            result = conn.execute(select_query, {"job_id": job_id})
+            row = result.fetchone()
+            
+            if not row:
+                raise HTTPException(status_code=404, detail="Job not found")
+            
+            current_step = row[0] or 0
+            new_step = min(9, current_step + 1)  # Cap at step 9 (Onboarding)
+            
+            # Update to next step
+            update_query = text("""
+                UPDATE job_postings 
+                SET current_step = :new_step,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = :job_id
+                RETURNING id, title, current_step
+            """)
+            
+            result = conn.execute(update_query, {"job_id": job_id, "new_step": new_step})
+            conn.commit()
+            
+            row = result.fetchone()
+            
+            log_user_action(
+                current_user.get("id"),
+                "advance_job_step",
+                "job",
+                {"job_id": job_id, "new_step": new_step}
+            )
+            
+            return {
+                "success": True,
+                "message": f"Job advanced to step {new_step}",
+                "data": {
+                    "id": row[0],
+                    "title": row[1],
+                    "current_step": row[2]
+                }
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to advance job step: {str(e)}")
+
+@router.patch("/jobs/{job_id}/revert")
+async def revert_job_step(
+    job_id: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """Revert job to previous workflow step"""
+    check_user_permissions(current_user.get("role"), ["admin", "super_admin", "hr", "manager"])
     
-    log_user_action(
-        current_user.get("id"),
-        "create_job",
-        "job",
-        {"job_id": job_id, "title": job.title}
-    )
-    
-    return {
-        "success": True,
-        "message": "Job created successfully",
-        "data": new_job
-    }
+    try:
+        with engine.connect() as conn:
+            # Get current step
+            select_query = text("SELECT current_step FROM job_postings WHERE id = :job_id")
+            result = conn.execute(select_query, {"job_id": job_id})
+            row = result.fetchone()
+            
+            if not row:
+                raise HTTPException(status_code=404, detail="Job not found")
+            
+            current_step = row[0] or 0
+            new_step = max(0, current_step - 1)  # Don't go below step 0
+            
+            # Update to previous step
+            update_query = text("""
+                UPDATE job_postings 
+                SET current_step = :new_step,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = :job_id
+                RETURNING id, title, current_step
+            """)
+            
+            result = conn.execute(update_query, {"job_id": job_id, "new_step": new_step})
+            conn.commit()
+            
+            row = result.fetchone()
+            
+            log_user_action(
+                current_user.get("id"),
+                "revert_job_step",
+                "job",
+                {"job_id": job_id, "new_step": new_step}
+            )
+            
+            return {
+                "success": True,
+                "message": f"Job reverted to step {new_step}",
+                "data": {
+                    "id": row[0],
+                    "title": row[1],
+                    "current_step": row[2]
+                }
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to revert job step: {str(e)}")
 
 @router.get("/jobs/{job_id}")
 async def get_job(

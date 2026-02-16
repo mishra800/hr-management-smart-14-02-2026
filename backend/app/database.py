@@ -15,8 +15,14 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Get database URL from environment
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:NcstProd135#$@192.168.20.68:5434/hr_management")
+# Get database URL from environment (REQUIRED - no default with credentials)
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    logger.error("DATABASE_URL environment variable is not set!")
+    logger.error("Please set DATABASE_URL in your .env file")
+    logger.error("Example: DATABASE_URL=postgresql://user:password@host:port/database")
+    raise ValueError("DATABASE_URL environment variable is required")
 
 # Create SQLAlchemy engine
 engine = create_engine(
@@ -66,6 +72,7 @@ def init_db():
     """Initialize database - create all tables"""
     try:
         # Import all models here to ensure they're registered with Base
+        # This imports the consolidated models.py with all SQLAlchemy ORM models
         from app import models  # noqa: F401
         
         # Create all tables

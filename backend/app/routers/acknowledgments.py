@@ -11,7 +11,7 @@ from datetime import datetime
 
 from ..database import get_db
 from ..dependencies import get_current_user
-from ..models_v2 import User, Employee  # Use models_v2 for SQLAlchemy models
+from ..models import User, Employee  # Consolidated SQLAlchemy ORM models
 from ..asset_acknowledgment_service import AssetAcknowledgmentService
 from ..role_utils import require_role
 
