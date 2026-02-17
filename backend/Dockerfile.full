@@ -1,45 +1,35 @@
-# Dockerfile with ALL dependencies including AI/ML features
-# Use this if you need face recognition, ML models, etc.
+# Dockerfile with face recognition using DeepFace
 # Build: docker build -f Dockerfile.full -t hr-backend-full .
 
-FROM python:3.13-slim
+FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TF_CPP_MIN_LOG_LEVEL=2
 
-# Install system dependencies for ML/AI features
+# Install system dependencies for OpenCV and TensorFlow
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    cmake \
     curl \
-    libopenblas-dev \
-    liblapack-dev \
-    libx11-dev \
-    libgtk-3-dev \
-    libboost-python-dev \
-    libboost-system-dev \
-    libboost-filesystem-dev \
-    pkg-config \
-    git \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
 # Copy requirements
-COPY requirements.txt .
+COPY requirements_full.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Optional: Install additional AI/ML packages if needed
-# RUN pip install --no-cache-dir textblob scikit-learn pandas numpy face-recognition opencv-python
-
-# Download spaCy model (if using NLP features)
-# RUN python -m spacy download en_core_web_sm
+RUN pip install --no-cache-dir -r requirements_full.txt
 
 # Copy application code
 COPY . .
@@ -62,4 +52,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

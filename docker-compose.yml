@@ -23,11 +23,11 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backend API
+  # Backend API with Face Recognition
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.full
     container_name: hr_backend
     restart: unless-stopped
     environment:

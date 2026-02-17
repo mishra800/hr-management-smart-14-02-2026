@@ -1,23 +1,26 @@
 """
 Face Recognition Utilities for Attendance System
-Uses face_recognition library for face matching
+Uses DeepFace library for face matching (easier alternative to dlib)
 """
 try:
-    import face_recognition
+    from deepface import DeepFace
+    import cv2
     FACE_RECOGNITION_AVAILABLE = True
+    print("INFO: DeepFace face recognition loaded successfully")
 except ImportError:
     FACE_RECOGNITION_AVAILABLE = False
-    print("WARNING: face_recognition library not installed. Face recognition features will be disabled.")
-    print("To enable face recognition, run: pip install face-recognition opencv-python Pillow")
+    print("WARNING: DeepFace library not installed. Face recognition features will be disabled.")
+    print("To enable face recognition, run: pip install deepface tensorflow opencv-python-headless")
 
 import numpy as np
 import base64
 from io import BytesIO
 from PIL import Image
 import os
+import tempfile
 
 def decode_base64_image(base64_string):
-    """Decode base64 image string to PIL Image"""
+    """Decode base64 image string to numpy array"""
     try:
         # Remove data URL prefix if present
         if ',' in base64_string:
@@ -25,44 +28,30 @@ def decode_base64_image(base64_string):
         
         image_data = base64.b64decode(base64_string)
         image = Image.open(BytesIO(image_data))
+        # Convert to RGB if needed
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
         return np.array(image)
     except Exception as e:
         print(f"Error decoding image: {e}")
         return None
 
-def get_face_encoding(image_array):
-    """Extract face encoding from image array"""
-    if not FACE_RECOGNITION_AVAILABLE:
-        return None, "Face recognition library not installed. Please install: pip install face-recognition"
-    
+def save_temp_image(image_array):
+    """Save numpy array as temporary image file for DeepFace"""
     try:
-        # Find all face locations in the image
-        face_locations = face_recognition.face_locations(image_array)
-        
-        if len(face_locations) == 0:
-            return None, "No face detected in image"
-        
-        if len(face_locations) > 1:
-            return None, "Multiple faces detected. Please ensure only one person is in frame"
-        
-        # Get face encoding
-        face_encodings = face_recognition.face_encodings(image_array, face_locations)
-        
-        if len(face_encodings) > 0:
-            return face_encodings[0], None
-        else:
-            return None, "Could not extract face features"
-            
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+        image = Image.fromarray(image_array)
+        image.save(temp_file.name)
+        return temp_file.name
     except Exception as e:
-        return None, f"Error processing face: {str(e)}"
+        print(f"Error saving temp image: {e}")
+        return None
 
 def detect_image_quality(image_array):
-    """
-    Analyze image quality for face recognition
-    Returns quality metrics and recommendations
-    """
+    """Analyze image quality for face recognition"""
     try:
-        import cv2
+        if not FACE_RECOGNITION_AVAILABLE:
+            return {"quality_score": 50, "acceptable": True, "issues": []}
         
         # Convert to grayscale for analysis
         if len(image_array.shape) == 3:
@@ -70,23 +59,11 @@ def detect_image_quality(image_array):
         else:
             gray = image_array
         
-        # Calculate image quality metrics
         height, width = gray.shape
-        
-        # Brightness analysis
         brightness = np.mean(gray)
-        
-        # Contrast analysis (standard deviation)
         contrast = np.std(gray)
-        
-        # Blur detection using Laplacian variance
         blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
         
-        # Image size check
-        min_size = 200
-        size_adequate = min(height, width) >= min_size
-        
-        # Quality assessment
         quality_issues = []
         quality_score = 100
         
@@ -105,8 +82,8 @@ def detect_image_quality(image_array):
             quality_issues.append("Image appears blurry")
             quality_score -= 25
         
-        if not size_adequate:
-            quality_issues.append(f"Image too small (minimum {min_size}x{min_size})")
+        if min(height, width) < 200:
+            quality_issues.append("Image too small")
             quality_score -= 30
         
         return {
@@ -118,235 +95,129 @@ def detect_image_quality(image_array):
             "issues": quality_issues,
             "acceptable": quality_score >= 60
         }
-        
     except Exception as e:
         return {
             "quality_score": 50,
             "issues": [f"Quality analysis failed: {str(e)}"],
-            "acceptable": True  # Default to acceptable if analysis fails
+            "acceptable": True
         }
 
-def detect_liveness_indicators(image_array):
+def compare_faces(profile_image_base64, attendance_image_base64, tolerance=0.4):
     """
-    Basic liveness detection to prevent photo spoofing
-    Returns indicators that suggest a live person vs photo
-    """
-    try:
-        import cv2
-        
-        # Convert to grayscale
-        if len(image_array.shape) == 3:
-            gray = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
-        else:
-            gray = image_array
-        
-        liveness_indicators = {
-            "texture_analysis": 0,
-            "edge_density": 0,
-            "color_distribution": 0,
-            "overall_score": 0,
-            "is_likely_live": True,
-            "warnings": []
-        }
-        
-        # Texture analysis - live faces have more natural texture variation
-        texture_score = cv2.Laplacian(gray, cv2.CV_64F).var()
-        liveness_indicators["texture_analysis"] = min(100, texture_score / 10)
-        
-        # Edge density analysis
-        edges = cv2.Canny(gray, 50, 150)
-        edge_density = np.sum(edges > 0) / (edges.shape[0] * edges.shape[1])
-        liveness_indicators["edge_density"] = min(100, edge_density * 1000)
-        
-        # Color distribution analysis (if color image)
-        if len(image_array.shape) == 3:
-            color_std = np.std(image_array, axis=(0, 1))
-            color_variation = np.mean(color_std)
-            liveness_indicators["color_distribution"] = min(100, color_variation * 2)
-        else:
-            liveness_indicators["color_distribution"] = 50
-        
-        # Calculate overall liveness score
-        overall_score = (
-            liveness_indicators["texture_analysis"] * 0.4 +
-            liveness_indicators["edge_density"] * 0.3 +
-            liveness_indicators["color_distribution"] * 0.3
-        )
-        liveness_indicators["overall_score"] = round(overall_score, 2)
-        
-        # Determine if likely live
-        if overall_score < 30:
-            liveness_indicators["is_likely_live"] = False
-            liveness_indicators["warnings"].append("Low texture variation - possible photo")
-        
-        if liveness_indicators["edge_density"] < 20:
-            liveness_indicators["warnings"].append("Unusual edge patterns detected")
-        
-        return liveness_indicators
-        
-    except Exception as e:
-        return {
-            "texture_analysis": 50,
-            "edge_density": 50,
-            "color_distribution": 50,
-            "overall_score": 50,
-            "is_likely_live": True,
-            "warnings": [f"Liveness analysis failed: {str(e)}"]
-        }
-
-def compare_faces(profile_image_base64, attendance_image_base64, tolerance=0.6):
-    """
-    Compare two face images and return match result with enhanced security
+    Compare two face images using DeepFace
     
     Args:
         profile_image_base64: Base64 encoded profile image
         attendance_image_base64: Base64 encoded attendance image
-        tolerance: Face matching tolerance (lower = stricter, default 0.6)
+        tolerance: Distance threshold (lower = stricter, default 0.4 for cosine)
     
     Returns:
-        dict with match result and security analysis
+        dict with match result and analysis
     """
     if not FACE_RECOGNITION_AVAILABLE:
         return {
             "match": False,
             "confidence": 0,
-            "message": "Face recognition library not installed. Please install: pip install face-recognition opencv-python Pillow",
+            "message": "Face recognition library not installed",
             "security_analysis": {
                 "quality_check": {"acceptable": False},
                 "liveness_check": {"is_likely_live": False}
             }
         }
     
+    temp_files = []
     try:
         # Decode images
         profile_image = decode_base64_image(profile_image_base64)
         attendance_image = decode_base64_image(attendance_image_base64)
         
-        if profile_image is None:
+        if profile_image is None or attendance_image is None:
             return {
                 "match": False,
                 "confidence": 0,
-                "message": "Failed to decode profile image",
-                "security_analysis": {
-                    "quality_check": {"acceptable": False},
-                    "liveness_check": {"is_likely_live": False}
-                }
+                "message": "Failed to decode images",
+                "security_analysis": {"quality_check": {"acceptable": False}}
             }
         
-        if attendance_image is None:
-            return {
-                "match": False,
-                "confidence": 0,
-                "message": "Failed to decode attendance image",
-                "security_analysis": {
-                    "quality_check": {"acceptable": False},
-                    "liveness_check": {"is_likely_live": False}
-                }
-            }
-        
-        # Perform security analysis on attendance image
+        # Quality analysis
         quality_analysis = detect_image_quality(attendance_image)
-        liveness_analysis = detect_liveness_indicators(attendance_image)
         
-        # Check if image quality is acceptable
         if not quality_analysis["acceptable"]:
             return {
                 "match": False,
                 "confidence": 0,
                 "message": f"Image quality too low: {', '.join(quality_analysis['issues'])}",
-                "security_analysis": {
-                    "quality_check": quality_analysis,
-                    "liveness_check": liveness_analysis
-                }
+                "security_analysis": {"quality_check": quality_analysis}
             }
         
-        # Check liveness indicators
-        security_warnings = []
-        if not liveness_analysis["is_likely_live"]:
-            security_warnings.append("Possible photo spoofing detected")
+        # Save as temp files for DeepFace
+        profile_path = save_temp_image(profile_image)
+        attendance_path = save_temp_image(attendance_image)
+        temp_files = [profile_path, attendance_path]
         
-        if liveness_analysis["warnings"]:
-            security_warnings.extend(liveness_analysis["warnings"])
-        
-        # Get face encodings
-        profile_encoding, profile_error = get_face_encoding(profile_image)
-        if profile_error:
+        if not profile_path or not attendance_path:
             return {
                 "match": False,
                 "confidence": 0,
-                "message": f"Profile image error: {profile_error}",
-                "security_analysis": {
-                    "quality_check": quality_analysis,
-                    "liveness_check": liveness_analysis
-                }
+                "message": "Failed to process images",
+                "security_analysis": {"quality_check": quality_analysis}
             }
         
-        attendance_encoding, attendance_error = get_face_encoding(attendance_image)
-        if attendance_error:
-            return {
-                "match": False,
-                "confidence": 0,
-                "message": f"Attendance image error: {attendance_error}",
-                "security_analysis": {
-                    "quality_check": quality_analysis,
-                    "liveness_check": liveness_analysis
-                }
-            }
+        # Verify faces using DeepFace
+        result = DeepFace.verify(
+            img1_path=profile_path,
+            img2_path=attendance_path,
+            model_name='Facenet',  # Fast and accurate
+            distance_metric='cosine',
+            enforce_detection=True
+        )
         
-        # Compare faces
-        face_distance = face_recognition.face_distance([profile_encoding], attendance_encoding)[0]
-        match = face_distance <= tolerance
+        # Calculate confidence (inverse of distance)
+        distance = result['distance']
+        confidence = max(0, min(100, (1 - distance) * 100))
+        match = result['verified']
         
-        # Calculate confidence percentage (inverse of distance)
-        confidence = max(0, min(100, (1 - face_distance) * 100))
-        
-        # Adjust confidence based on security analysis
-        security_confidence_modifier = 1.0
-        
-        if liveness_analysis["overall_score"] < 50:
-            security_confidence_modifier *= 0.8  # Reduce confidence for low liveness score
-        
+        # Adjust based on quality
         if quality_analysis["quality_score"] < 80:
-            security_confidence_modifier *= 0.9  # Reduce confidence for low quality
+            confidence *= 0.9
         
-        adjusted_confidence = confidence * security_confidence_modifier
-        
-        # Final security check - reject if too many warnings
-        if len(security_warnings) >= 2 and adjusted_confidence < 85:
-            match = False
-            security_warnings.append("Multiple security concerns detected")
-        
-        result_message = "Face matched successfully"
-        if match and security_warnings:
-            result_message += f" (Security warnings: {len(security_warnings)})"
-        elif not match:
-            result_message = "Face does not match profile"
+        message = "Face matched successfully" if match else "Face does not match profile"
         
         return {
             "match": match,
-            "confidence": round(adjusted_confidence, 2),
-            "raw_confidence": round(confidence, 2),
-            "message": result_message,
-            "face_distance": round(face_distance, 4),
+            "confidence": round(confidence, 2),
+            "message": message,
+            "face_distance": round(distance, 4),
             "security_analysis": {
                 "quality_check": quality_analysis,
-                "liveness_check": liveness_analysis,
-                "security_warnings": security_warnings,
-                "confidence_modifier": round(security_confidence_modifier, 3)
+                "model_used": "Facenet",
+                "threshold": tolerance
             }
         }
         
+    except ValueError as e:
+        # Face not detected
+        return {
+            "match": False,
+            "confidence": 0,
+            "message": f"Face detection failed: {str(e)}",
+            "security_analysis": {"quality_check": {"acceptable": False}}
+        }
     except Exception as e:
         return {
             "match": False,
             "confidence": 0,
             "message": f"Face recognition error: {str(e)}",
-            "security_analysis": {
-                "quality_check": {"acceptable": False},
-                "liveness_check": {"is_likely_live": False},
-                "security_warnings": [f"Analysis failed: {str(e)}"]
-            }
+            "security_analysis": {"quality_check": {"acceptable": False}}
         }
+    finally:
+        # Cleanup temp files
+        for temp_file in temp_files:
+            if temp_file and os.path.exists(temp_file):
+                try:
+                    os.unlink(temp_file)
+                except:
+                    pass
 
 def save_profile_image(employee_id, image_base64):
     """Save employee profile image for future face matching"""
@@ -354,7 +225,6 @@ def save_profile_image(employee_id, image_base64):
         upload_dir = "uploads/profile_images"
         os.makedirs(upload_dir, exist_ok=True)
         
-        # Decode and save image
         if ',' in image_base64:
             image_base64 = image_base64.split(',')[1]
         
@@ -384,14 +254,14 @@ def load_profile_image(employee_id):
         print(f"Error loading profile image: {e}")
         return None
 
-async def verify_face(employee_id, attendance_image_base64, tolerance=0.6):
+async def verify_face(employee_id, attendance_image_base64, tolerance=0.4):
     """
     Verify face against stored profile image
     
     Args:
         employee_id: Employee ID to verify against
         attendance_image_base64: Base64 encoded attendance image
-        tolerance: Face matching tolerance (lower = stricter, default 0.6)
+        tolerance: Face matching tolerance (lower = stricter, default 0.4)
     
     Returns:
         dict with verification result
@@ -405,7 +275,6 @@ async def verify_face(employee_id, attendance_image_base64, tolerance=0.6):
         }
     
     try:
-        # Load profile image
         profile_image_base64 = load_profile_image(employee_id)
         
         if not profile_image_base64:
@@ -416,7 +285,6 @@ async def verify_face(employee_id, attendance_image_base64, tolerance=0.6):
                 "confidence": 0
             }
         
-        # Compare faces
         result = compare_faces(profile_image_base64, attendance_image_base64, tolerance)
         
         if result["match"]:
@@ -462,8 +330,8 @@ def validate_profile_image(image_base64):
             "recommendations": ["Install face recognition dependencies"]
         }
     
+    temp_file = None
     try:
-        # Decode image
         image_array = decode_base64_image(image_base64)
         if image_array is None:
             return {
@@ -472,54 +340,43 @@ def validate_profile_image(image_base64):
                 "recommendations": ["Use a valid image format (JPEG, PNG)"]
             }
         
-        # Check image quality
         quality_analysis = detect_image_quality(image_array)
         
-        # Check for face detection
-        face_encoding, face_error = get_face_encoding(image_array)
+        # Try to detect face
+        temp_file = save_temp_image(image_array)
+        face_detected = False
+        face_error = None
+        
+        try:
+            DeepFace.extract_faces(img_path=temp_file, enforce_detection=True)
+            face_detected = True
+        except Exception as e:
+            face_error = str(e)
         
         recommendations = []
         issues = []
         
-        # Quality checks
         if not quality_analysis["acceptable"]:
             issues.extend(quality_analysis["issues"])
-            
             if quality_analysis["brightness"] < 50:
                 recommendations.append("Take photo in better lighting")
             elif quality_analysis["brightness"] > 200:
                 recommendations.append("Reduce lighting or avoid direct flash")
-            
             if quality_analysis["blur_score"] < 100:
                 recommendations.append("Hold camera steady and ensure focus")
-            
-            if quality_analysis["contrast"] < 30:
-                recommendations.append("Improve lighting contrast")
         
-        # Face detection checks
-        if face_error:
-            issues.append(face_error)
-            
-            if "No face detected" in face_error:
-                recommendations.append("Ensure your face is clearly visible and centered")
-            elif "Multiple faces" in face_error:
-                recommendations.append("Ensure only one person is in the photo")
-            else:
-                recommendations.append("Retake photo with better face positioning")
+        if not face_detected:
+            issues.append("No face detected" if "detect" in str(face_error).lower() else "Face detection failed")
+            recommendations.append("Ensure your face is clearly visible and centered")
         
-        # Overall validation
-        is_valid = len(issues) == 0 and quality_analysis["acceptable"] and face_encoding is not None
-        
-        if is_valid:
-            message = "Profile image is suitable for face recognition"
-        else:
-            message = f"Image validation failed: {', '.join(issues)}"
+        is_valid = len(issues) == 0 and quality_analysis["acceptable"] and face_detected
+        message = "Profile image is suitable for face recognition" if is_valid else f"Image validation failed: {', '.join(issues)}"
         
         return {
             "valid": is_valid,
             "message": message,
             "quality_score": quality_analysis["quality_score"],
-            "face_detected": face_encoding is not None,
+            "face_detected": face_detected,
             "issues": issues,
             "recommendations": recommendations,
             "quality_details": quality_analysis
@@ -531,3 +388,9 @@ def validate_profile_image(image_base64):
             "message": f"Validation error: {str(e)}",
             "recommendations": ["Try uploading the image again"]
         }
+    finally:
+        if temp_file and os.path.exists(temp_file):
+            try:
+                os.unlink(temp_file)
+            except:
+                pass

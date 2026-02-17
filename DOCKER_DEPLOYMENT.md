@@ -2,6 +2,10 @@
 
 Complete guide for deploying the Smart HR Management System using Docker.
 
+## ⚠️ Important: Face Recognition
+
+Face recognition is **disabled by default** to avoid complex build dependencies. The app works perfectly without it - attendance marking uses photo capture and all features work normally. See [FACE_RECOGNITION_SETUP.md](FACE_RECOGNITION_SETUP.md) if you need to enable it.
+
 ## 📋 Prerequisites
 
 - Docker Engine 20.10+
@@ -28,7 +32,7 @@ nano .env  # or use your preferred editor
 
 ### 3. Start Services
 ```bash
-# Production deployment
+# Production deployment (without face recognition)
 docker-compose up -d
 
 # Development deployment (with hot reload)
@@ -42,6 +46,9 @@ docker-compose exec backend alembic upgrade head
 
 # Create default users
 docker-compose exec backend python create_default_users.py
+
+# Initialize capabilities
+docker-compose exec backend python initialize_capabilities.py
 
 # (Optional) Create sample data
 docker-compose exec backend python create_employee_records.py
