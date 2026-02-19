@@ -66,7 +66,7 @@ export default function Layout() {
   useEffect(() => {
     if (location.pathname === '/dashboard/profile') {
       const reloadImage = async () => {
-        try:
+        try {
           const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}/attendance/check-profile-image`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
