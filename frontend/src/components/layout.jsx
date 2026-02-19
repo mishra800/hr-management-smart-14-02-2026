@@ -29,7 +29,7 @@ export default function Layout() {
   useEffect(() => {
     const loadProfileImage = async () => {
       try {
-        const response = await fetch('http://localhost:8000/attendance/check-profile-image', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}/attendance/check-profile-image`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -66,8 +66,8 @@ export default function Layout() {
   useEffect(() => {
     if (location.pathname === '/dashboard/profile') {
       const reloadImage = async () => {
-        try {
-          const response = await fetch('http://localhost:8000/attendance/check-profile-image', {
+        try:
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}/attendance/check-profile-image`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -454,7 +454,7 @@ export default function Layout() {
                 >
                   {profileImage ? (
                     <img 
-                      src={`http://localhost:8000${profileImage}`}
+                      src={`${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}${profileImage}`}
                       alt="Profile"
                       className="w-10 h-10 rounded-xl object-cover shadow-md border-2 border-white"
                       onError={(e) => {
@@ -491,7 +491,7 @@ export default function Layout() {
                         <div className="flex items-center space-x-3 mb-2">
                           {profileImage ? (
                             <img 
-                              src={`http://localhost:8000${profileImage}`}
+                              src={`${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}${profileImage}`}
                               alt="Profile"
                               className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
                             />

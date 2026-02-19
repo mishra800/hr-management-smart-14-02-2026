@@ -120,7 +120,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
       const response = await fetch(`${baseURL}/notifications/`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -153,7 +153,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
       const response = await fetch(`${baseURL}/notifications/unread-count`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -183,7 +183,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
       const response = await fetch(`${baseURL}/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: {
@@ -219,7 +219,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
       const response = await fetch(`${baseURL}/notifications/mark-all-read`, {
         method: 'POST',
         headers: {
@@ -251,7 +251,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
       const response = await fetch(`${baseURL}/notifications/${notificationId}`, {
         method: 'DELETE',
         headers: {

@@ -128,7 +128,7 @@ export default function ResumePopup({ application, onClose }) {
     const fileName = application.resume_url?.split('/').pop() || application.resume_url?.split('\\').pop();
     
     if (fileName) {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
       // Try different possible paths
       const possiblePaths = [
         `/uploads/${fileName}`,

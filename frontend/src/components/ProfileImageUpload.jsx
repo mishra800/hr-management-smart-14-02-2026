@@ -181,7 +181,7 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
           <img 
             src={currentImage.startsWith('data:') || currentImage.startsWith('http') || currentImage.startsWith('/') 
               ? currentImage 
-              : `http://localhost:8000${currentImage}`
+              : `${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}${currentImage}`
             } 
             alt="Profile" 
             className="w-32 h-32 rounded-full mx-auto border-4 border-gray-200 object-cover"
