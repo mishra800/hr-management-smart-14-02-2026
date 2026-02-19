@@ -6,6 +6,7 @@ import NotificationCenter from './NotificationCenter';
 import ThemeToggle from './ThemeToggle';
 import aiAssistantService from '../services/aiAssistantService';
 import logo from '../assets/logo.png';
+import API_BASE_URL from '../config/api';
 
 export default function Layout() {
   const { logout, user } = useAuth();
@@ -29,7 +30,7 @@ export default function Layout() {
   useEffect(() => {
     const loadProfileImage = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}/attendance/check-profile-image`, {
+        const response = await fetch(`${API_BASE_URL}/attendance/check-profile-image`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -67,7 +68,7 @@ export default function Layout() {
     if (location.pathname === '/dashboard/profile') {
       const reloadImage = async () => {
         try {
-          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}/attendance/check-profile-image`, {
+          const response = await fetch(`${API_BASE_URL}/attendance/check-profile-image`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -108,8 +109,11 @@ export default function Layout() {
     } catch (error) {
       console.error('Error getting AI response:', error);
       
-      // Fallback to local response
-      const localResponse = aiAssistantService.getLocalResponse(currentInput);
+      // Fallback to intelligent response
+      const localResponse = aiAssistantService.getIntelligentFallback(currentInput, {
+        page: location.pathname,
+        user: user
+      });
       const formattedResponse = aiAssistantService.formatResponse(localResponse);
       
       setChatMessages(prev => [...prev, { 
@@ -454,7 +458,7 @@ export default function Layout() {
                 >
                   {profileImage ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}${profileImage}`}
+                      src={`${API_BASE_URL}${profileImage}`}
                       alt="Profile"
                       className="w-10 h-10 rounded-xl object-cover shadow-md border-2 border-white"
                       onError={(e) => {
@@ -491,7 +495,7 @@ export default function Layout() {
                         <div className="flex items-center space-x-3 mb-2">
                           {profileImage ? (
                             <img 
-                              src={`${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}${profileImage}`}
+                              src={`${API_BASE_URL}${profileImage}`}
                               alt="Profile"
                               className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
                             />

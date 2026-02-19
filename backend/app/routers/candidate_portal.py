@@ -8,6 +8,7 @@ from typing import Optional
 from datetime import datetime, timedelta
 import secrets
 import string
+import os
 from passlib.context import CryptContext
 from app import database, models, schemas
 from app.email_service import email_service
@@ -17,6 +18,9 @@ router = APIRouter(
     prefix="/candidate-portal",
     tags=["candidate-portal"]
 )
+
+# Get app base URL from environment
+APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -67,8 +71,8 @@ async def create_candidate_login(
     """
     
     # Get application
-    application = db.query(models.Application).filter(
-        models.Application.id == data.application_id
+    application = db.query(models.JobApplication).filter(
+        models.JobApplication.id == data.application_id
     ).first()
     
     if not application:
@@ -84,7 +88,7 @@ async def create_candidate_login(
         return CandidateLoginResponse(
             email=application.candidate_email,
             password="[Already exists - password not shown]",
-            login_url="http://localhost:3000/login",
+            login_url=f"{APP_BASE_URL}/login",
             message="Candidate already has login credentials"
         )
     
@@ -116,7 +120,7 @@ async def create_candidate_login(
                 job_title=application.job.title if application.job else "Position",
                 login_email=application.candidate_email,
                 temporary_password=temp_password,
-                login_url="http://localhost:3000/login"
+                login_url=f"{APP_BASE_URL}/login"
             )
         except Exception as e:
             print(f"Failed to send email: {e}")
@@ -124,7 +128,7 @@ async def create_candidate_login(
     return CandidateLoginResponse(
         email=application.candidate_email,
         password=temp_password,
-        login_url="http://localhost:3000/login",
+        login_url=f"{APP_BASE_URL}/login",
         message="Login credentials created successfully. Email sent to candidate."
     )
 
@@ -138,8 +142,8 @@ async def grant_exam_access(
     Assigns assessment and sets deadline
     """
     
-    application = db.query(models.Application).filter(
-        models.Application.id == data.application_id
+    application = db.query(models.JobApplication).filter(
+        models.JobApplication.id == data.application_id
     ).first()
     
     if not application:
@@ -212,8 +216,8 @@ async def grant_ai_interview_access(
     Grant AI interview access after exam completion
     """
     
-    application = db.query(models.Application).filter(
-        models.Application.id == application_id
+    application = db.query(models.JobApplication).filter(
+        models.JobApplication.id == application_id
     ).first()
     
     if not application:
@@ -247,7 +251,7 @@ async def grant_ai_interview_access(
             candidate_email=application.candidate_email,
             candidate_name=application.candidate_name,
             job_title=application.job.title if application.job else "Position",
-            interview_link=f"http://localhost:3000/recruitment/interview/{application_id}"
+            interview_link=f"{APP_BASE_URL}/recruitment/interview/{application_id}"
         )
     except Exception as e:
         print(f"Failed to send email: {e}")
@@ -255,7 +259,7 @@ async def grant_ai_interview_access(
     return {
         "message": "AI interview access granted",
         "interview_id": ai_interview.id,
-        "interview_link": f"http://localhost:3000/recruitment/interview/{application_id}"
+        "interview_link": f"{APP_BASE_URL}/recruitment/interview/{application_id}"
     }
 
 @router.get("/candidate-dashboard/{email}")
@@ -268,8 +272,8 @@ async def get_candidate_dashboard(
     """
     
     # Get all applications for this candidate
-    applications = db.query(models.Application).filter(
-        models.Application.candidate_email == email
+    applications = db.query(models.JobApplication).filter(
+        models.JobApplication.candidate_email == email
     ).all()
     
     result = []

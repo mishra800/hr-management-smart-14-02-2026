@@ -129,7 +129,7 @@ def get_next_question(interview_id: int, db: Session = Depends(database.get_db))
 
 @router.post("/generate-questions/{application_id}", response_model=List[str])
 def generate_questions_from_resume(application_id: int, db: Session = Depends(database.get_db)):
-    application = db.query(models.Application).filter(models.Application.id == application_id).first()
+    application = db.query(models.JobApplication).filter(models.JobApplication.id == application_id).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     

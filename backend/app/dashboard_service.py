@@ -209,10 +209,10 @@ class DashboardService:
         """Get recruitment-related statistics"""
         try:
             recruitment_data = self.db.query(
-                func.count(models.Job.id).filter(models.Job.is_active == True).label('open_jobs'),
-                func.count(models.Application.id).filter(models.Application.status == 'applied').label('pending_applications'),
-                func.count(models.Application.id).label('total_applications')
-            ).select_from(models.Job).outerjoin(models.Application).first()
+                func.count(models.JobPosting.id).filter(models.JobPosting.is_active == True).label('open_jobs'),
+                func.count(models.JobApplication.id).filter(models.JobApplication.status == 'applied').label('pending_applications'),
+                func.count(models.JobApplication.id).label('total_applications')
+            ).select_from(models.JobPosting).outerjoin(models.JobApplication).first()
             
             return {
                 'open_jobs': recruitment_data.open_jobs or 0,
@@ -254,13 +254,13 @@ class DashboardService:
     def _get_candidate_stats(self, current_user: models.User) -> Dict[str, int]:
         """Get statistics for candidate role"""
         try:
-            my_applications = self.db.query(models.Application).filter(
-                models.Application.candidate_id == current_user.id
+            my_applications = self.db.query(models.JobApplication).filter(
+                models.JobApplication.candidate_id == current_user.id
             ).count()
             
-            pending_applications = self.db.query(models.Application).filter(
-                models.Application.candidate_id == current_user.id,
-                models.Application.status.in_(['applied', 'screening'])
+            pending_applications = self.db.query(models.JobApplication).filter(
+                models.JobApplication.candidate_id == current_user.id,
+                models.JobApplication.status.in_(['applied', 'screening'])
             ).count()
             
             return {
@@ -316,9 +316,9 @@ class DashboardService:
         
         try:
             # Recent applications with eager loading
-            recent_apps = self.db.query(models.Application).options(
-                joinedload(models.Application.job)
-            ).order_by(desc(models.Application.applied_date)).limit(3).all()
+            recent_apps = self.db.query(models.JobApplication).options(
+                joinedload(models.JobApplication.job)
+            ).order_by(desc(models.JobApplication.applied_date)).limit(3).all()
             
             for app in recent_apps:
                 activities.append({
@@ -419,11 +419,11 @@ class DashboardService:
         activities = []
         
         try:
-            my_applications = self.db.query(models.Application).options(
-                joinedload(models.Application.job)
+            my_applications = self.db.query(models.JobApplication).options(
+                joinedload(models.JobApplication.job)
             ).filter(
-                models.Application.candidate_id == current_user.id
-            ).order_by(desc(models.Application.applied_date)).limit(limit).all()
+                models.JobApplication.candidate_id == current_user.id
+            ).order_by(desc(models.JobApplication.applied_date)).limit(limit).all()
             
             for app in my_applications:
                 activities.append({
@@ -503,8 +503,8 @@ class DashboardService:
             
             # New applications in last 24 hours
             yesterday = datetime.utcnow() - timedelta(days=1)
-            new_applications = self.db.query(models.Application).filter(
-                models.Application.applied_date >= yesterday
+            new_applications = self.db.query(models.JobApplication).filter(
+                models.JobApplication.applied_date >= yesterday
             ).count()
             
             if new_applications > 0:
@@ -518,8 +518,8 @@ class DashboardService:
                 })
             
             # Pending applications
-            pending_applications = self.db.query(models.Application).filter(
-                models.Application.status == 'applied'
+            pending_applications = self.db.query(models.JobApplication).filter(
+                models.JobApplication.status == 'applied'
             ).count()
             
             if pending_applications > 0:
@@ -571,9 +571,9 @@ class DashboardService:
         notifications = []
         
         try:
-            my_applications = self.db.query(models.Application).filter(
-                models.Application.candidate_id == current_user.id,
-                models.Application.status.in_(['applied', 'screening', 'interview'])
+            my_applications = self.db.query(models.JobApplication).filter(
+                models.JobApplication.candidate_id == current_user.id,
+                models.JobApplication.status.in_(['applied', 'screening', 'interview'])
             ).count()
             
             if my_applications > 0:

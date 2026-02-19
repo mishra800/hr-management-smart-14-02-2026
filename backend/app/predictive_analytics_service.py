@@ -454,9 +454,9 @@ class PredictiveAnalyticsService:
     def predict_recruitment_success(self, application_ids: Optional[List[int]] = None) -> List[Dict[str, Any]]:
         """Predict recruitment success probability for candidates"""
         try:
-            query = self.db.query(models.Application)
+            query = self.db.query(models.JobApplication)
             if application_ids:
-                query = query.filter(models.Application.id.in_(application_ids))
+                query = query.filter(models.JobApplication.id.in_(application_ids))
             
             applications = query.all()
             predictions = []
@@ -848,7 +848,7 @@ class PredictiveAnalyticsService:
     # RECRUITMENT PREDICTION HELPER METHODS
     # ============================================
     
-    def _extract_candidate_features(self, application: models.Application) -> List[float]:
+    def _extract_candidate_features(self, application: models.JobApplication) -> List[float]:
         """Extract features for candidate success prediction"""
         features = []
         
@@ -895,7 +895,7 @@ class PredictiveAnalyticsService:
     
     def _train_recruitment_model(self):
         """Train recruitment success prediction model"""
-        applications = self.db.query(models.Application).all()
+        applications = self.db.query(models.JobApplication).all()
         
         X = []
         y = []
@@ -938,7 +938,7 @@ class PredictiveAnalyticsService:
         
         return min(max(performance_score * 5, 1.0), 5.0)  # Convert to 1-5 scale
     
-    def _assess_cultural_fit(self, application: models.Application) -> float:
+    def _assess_cultural_fit(self, application: models.JobApplication) -> float:
         """Assess cultural fit score"""
         # In real implementation, this would analyze interview responses, values alignment, etc.
         # For now, simulate based on AI interview emotional tone
@@ -970,7 +970,7 @@ class PredictiveAnalyticsService:
         
         return min(max(retention_score, 0.3), 0.95)  # Keep between 30% and 95%
     
-    def _analyze_candidate_profile(self, application: models.Application, 
+    def _analyze_candidate_profile(self, application: models.JobApplication, 
                                  features: List[float]) -> Tuple[List[str], List[str]]:
         """Analyze candidate profile for risk factors and strengths"""
         risk_factors = []

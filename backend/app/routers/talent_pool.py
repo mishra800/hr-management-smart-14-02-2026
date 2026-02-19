@@ -93,7 +93,7 @@ async def move_application_to_talent_pool(
 ):
     """Move rejected application to talent pool"""
     
-    app = db.query(models.Application).filter(models.Application.id == application_id).first()
+    app = db.query(models.JobApplication).filter(models.JobApplication.id == application_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
     
@@ -309,7 +309,7 @@ async def match_job_with_talent_pool(
 ):
     """Find matching candidates from talent pool for a job"""
     
-    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    job = db.query(models.JobPosting).filter(models.JobPosting.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     

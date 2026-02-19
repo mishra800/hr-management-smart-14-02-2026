@@ -29,13 +29,13 @@ def get_dashboard_overview(
     # Date filtering
     query_filter = []
     if start_date:
-        query_filter.append(models.Application.applied_date >= start_date)
+        query_filter.append(models.JobApplication.applied_date >= start_date)
     if end_date:
-        query_filter.append(models.Application.applied_date <= end_date)
+        query_filter.append(models.JobApplication.applied_date <= end_date)
     
     # Recruitment metrics
-    total_applications = db.query(models.Application).filter(*query_filter).count()
-    active_jobs = db.query(models.Job).filter(models.Job.is_active == True).count()
+    total_applications = db.query(models.JobApplication).filter(*query_filter).count()
+    active_jobs = db.query(models.JobPosting).filter(models.JobPosting.is_active == True).count()
     
     # Employee metrics
     total_employees = db.query(models.Employee).count()
@@ -79,14 +79,14 @@ def get_recruitment_funnel(
 ):
     """Get recruitment funnel data with conversion rates"""
     
-    query = db.query(models.Application)
+    query = db.query(models.JobApplication)
     
     if job_id:
-        query = query.filter(models.Application.job_id == job_id)
+        query = query.filter(models.JobApplication.job_id == job_id)
     if start_date:
-        query = query.filter(models.Application.applied_date >= start_date)
+        query = query.filter(models.JobApplication.applied_date >= start_date)
     if end_date:
-        query = query.filter(models.Application.applied_date <= end_date)
+        query = query.filter(models.JobApplication.applied_date <= end_date)
     
     applications = query.all()
     
@@ -134,8 +134,8 @@ def get_kpi_summary(
     """Get all key performance indicators in one call"""
     
     # Recruitment KPIs
-    total_applications = db.query(models.Application).count()
-    hired_count = db.query(models.Application).filter(models.Application.status == 'hired').count()
+    total_applications = db.query(models.JobApplication).count()
+    hired_count = db.query(models.JobApplication).filter(models.JobApplication.status == 'hired').count()
     
     # Employee KPIs
     total_employees = db.query(models.Employee).count()

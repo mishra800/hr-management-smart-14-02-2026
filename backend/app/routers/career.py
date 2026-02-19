@@ -14,7 +14,7 @@ router = APIRouter(
 @router.get("/jobs", response_model=List[schemas.JobOut])
 def get_public_jobs(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
     # In a real app, we might filter by is_active=True specifically for public view
-    jobs = db.query(models.Job).filter(models.Job.is_active == True).offset(skip).limit(limit).all()
+    jobs = db.query(models.JobPosting).filter(models.JobPosting.is_active == True).offset(skip).limit(limit).all()
     return jobs
 
 @router.get("/dashboard")
@@ -362,9 +362,9 @@ def get_available_mentors(db: Session) -> List[Dict]:
 def get_internal_opportunities(employee: models.Employee, db: Session) -> List[Dict]:
     """Get internal job opportunities matched to employee"""
     # Get active internal jobs and calculate match scores
-    jobs = db.query(models.Job).filter(
-        models.Job.is_active == True,
-        models.Job.is_internal == True  # Assuming there's an is_internal field
+    jobs = db.query(models.JobPosting).filter(
+        models.JobPosting.is_active == True,
+        models.JobPosting.is_internal == True  # Assuming there's an is_internal field
     ).all()
     
     opportunities = []
@@ -387,7 +387,7 @@ def get_internal_opportunities(employee: models.Employee, db: Session) -> List[D
     
     return opportunities
 
-def calculate_job_match_score(employee: models.Employee, job: models.Job) -> int:
+def calculate_job_match_score(employee: models.Employee, job: models.JobPosting) -> int:
     """Calculate how well an employee matches a job"""
     # Mock calculation - in production, this would analyze skills, experience, etc.
     return 85

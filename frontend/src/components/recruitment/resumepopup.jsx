@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import API_BASE_URL from '../../config/api';
 
 export default function ResumePopup({ application, onClose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [debugInfo, setDebugInfo] = useState(null);
 
   const getResumeUrl = () => {
     return `/api/recruitment/applications/${application.id}/resume`;
@@ -14,17 +14,6 @@ export default function ResumePopup({ application, onClose }) {
     setError(null);
     
     try {
-      // First, get debug info (optional)
-      try {
-        const debugResponse = await fetch(`/api/recruitment/applications/${application.id}/debug`);
-        if (debugResponse.ok) {
-          const debug = await debugResponse.json();
-          setDebugInfo(debug);
-        }
-      } catch (debugError) {
-        console.log('Debug info not available:', debugError);
-      }
-      
       // Extract filename and extension
       const fileName = application.resume_url?.split('/').pop() || application.resume_url?.split('\\').pop();
       const fileExt = fileName?.split('.').pop()?.toLowerCase() || '';
@@ -128,7 +117,6 @@ export default function ResumePopup({ application, onClose }) {
     const fileName = application.resume_url?.split('/').pop() || application.resume_url?.split('\\').pop();
     
     if (fileName) {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
       // Try different possible paths
       const possiblePaths = [
         `/uploads/${fileName}`,

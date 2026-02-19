@@ -1,273 +1,268 @@
-# HR Management System
+# Smart HR Management System
 
-A comprehensive HR Management System with FastAPI backend and React frontend, featuring employee management, attendance tracking, leave management, recruitment, and more.
-
-## 🎯 Current Status
-
-**Backend Status**: ✅ **Stable & Running**
-- 23/45+ routers successfully implemented
-- Comprehensive error handling system
-- JWT authentication with role-based access control
-- Mock data implementation (database integration in progress)
-
-**Frontend Status**: ✅ **Fully Functional**
-- Complete React-based UI
-- All HR modules implemented
-- Responsive design with Tailwind CSS
+A comprehensive, modern HR management system built with React (Frontend) and FastAPI (Backend), featuring AI-powered recruitment, attendance tracking, performance management, and more.
 
 ## 🚀 Features
 
-### Core HR Modules
-- **👤 Employee Management** - Complete employee lifecycle
-- **⏰ Attendance System** - Real-time tracking with face recognition support
-- **🏖️ Leave Management** - Comprehensive leave request and approval system
-- **💰 Payroll Management** - Automated payroll processing
-- **🎯 Recruitment System** - End-to-end hiring workflow
-- **📊 Performance Management** - Employee performance tracking
-- **🎓 Learning & Development** - Training and skill management
-- **🏢 Asset Management** - IT asset tracking and assignment
+### Core Modules
+- **Employee Management** - Complete employee lifecycle management
+- **Attendance Tracking** - Real-time attendance with face recognition support
+- **Leave Management** - Automated leave requests and approvals
+- **Recruitment** - AI-powered candidate screening and assessment
+- **Performance Reviews** - 360-degree feedback and goal tracking
+- **Payroll** - Automated salary calculations and payslips
+- **Asset Management** - IT asset tracking and acknowledgments
+- **Learning & Development** - Training modules and progress tracking
+- **Onboarding** - Streamlined new hire onboarding process
 
 ### Advanced Features
-- **🤖 AI Assistant** - Intelligent HR support
-- **📈 Analytics & Reporting** - Comprehensive HR insights
-- **🔔 Notifications** - Real-time system notifications
-- **📱 Mobile Support** - Mobile-friendly attendance system
-- **🎉 Employee Engagement** - Recognition and feedback systems
-
-## 🛠️ Technology Stack
-
-### Backend
-- **FastAPI** - Modern Python web framework
-- **JWT Authentication** - Secure token-based auth
-- **Comprehensive Error Handling** - Standardized error responses
-- **Role-Based Access Control** - Multi-level permissions
-
-### Frontend
-- **React 18** - Modern React with hooks
-- **Tailwind CSS** - Utility-first styling
-- **Axios** - HTTP client for API calls
-- **Context API** - State management
+- **AI-Powered Recruitment** - Resume parsing, candidate scoring, AI interviews
+- **Predictive Analytics** - Attrition prediction, workforce planning
+- **Face Recognition** - Attendance verification (optional)
+- **Multi-role Access Control** - Admin, HR, Manager, Employee roles
+- **Real-time Notifications** - Email and in-app notifications
+- **Mobile Responsive** - Works on all devices
+- **Dark Mode** - Professional theme support
+- **API Documentation** - Interactive Swagger/OpenAPI docs
 
 ## 📋 Prerequisites
 
-- **Python 3.8+**
-- **Node.js 16+**
-- **npm or yarn**
+- **Docker** and **Docker Compose** (recommended)
+- OR manually:
+  - Python 3.10+
+  - Node.js 20+
+  - PostgreSQL 14+
 
-## 🚀 Quick Start
+## 🏃 Quick Start
 
-### Option 1: Automated Setup (Recommended)
+### Using Docker (Recommended)
+
+1. **Clone the repository**
 ```bash
-# Clone the repository
-git clone <your-repo-url>
-cd hr-management-system
-
-# Run the complete setup
-scripts\setup-project.cmd
+git clone <repository-url>
+cd smart-hr-management-system
 ```
 
-### Option 2: Manual Setup
-
-#### 1. Backend Setup
+2. **Configure environment**
 ```bash
-cd backend
-
-# Create environment file
-copy .env.example .env
-# Edit .env with your database credentials
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Setup database and create default users
-python test_db_connection.py
-python create_default_users.py
+cp .env.production .env
+# Edit .env with your configuration
 ```
 
-#### 2. Frontend Setup
+3. **Deploy**
 ```bash
-cd frontend
+# Linux/Mac
+chmod +x deploy.sh
+./deploy.sh
 
-# Create environment file
-copy .env.example .env
-
-# Install dependencies
-npm install
+# Windows
+.\deploy.ps1
 ```
 
-#### 3. Start the Application
+4. **Initialize database**
 ```bash
-# Terminal 1: Start Backend
-scripts\start-backend.cmd
-
-# Terminal 2: Start Frontend
-scripts\start-frontend.cmd
+docker-compose exec backend python initialize_capabilities.py
+docker-compose exec backend python create_default_users.py
 ```
 
-## 🌐 Access the Application
+5. **Access the application**
+- Frontend: http://localhost
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
+**Default Login:**
+- Email: `admin@company.com`
+- Password: `admin123` (change immediately!)
 
-## 🔐 Default Login Credentials
+### Manual Installation
 
-| Role | Email | Password |
-|------|-------|----------|
-| Super Admin | admin@company.com | admin123 |
-| HR Manager | hr@company.com | hr123 |
-| Manager | manager@company.com | manager123 |
-| Employee | employee@company.com | emp123 |
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed manual installation instructions.
 
 ## 📚 Documentation
 
-- **[Quick Reference](QUICK_REFERENCE.md)** - Common commands and quick help
-- **[Getting Started Guide](docs/GETTING_STARTED.md)** - Complete setup and first steps
-- **[Database Setup](docs/DATABASE_SETUP.md)** - Database configuration and troubleshooting
-- **[Scripts Reference](scripts/README.md)** - Available utility scripts
-- **[Complete Documentation](COMPLETE_APPLICATION_DOCUMENTATION.md)** - Full system documentation
-- **[What's Implemented](WHAT_IS_IMPLEMENTED.md)** - Current feature status
-- **[Cleanup Summary](CLEANUP_SUMMARY.md)** - Recent project cleanup details
+- [Deployment Guide](DEPLOYMENT.md) - Complete deployment instructions
+- [Production Checklist](PRODUCTION_CHECKLIST.md) - Pre-deployment checklist
+- [API Documentation](http://localhost:8000/docs) - Interactive API docs (after deployment)
 
-## 🔧 Development
+## 🏗️ Architecture
 
-### Project Structure
 ```
-├── backend/           # FastAPI backend
-│   ├── app/          # Application code
-│   ├── main.py       # FastAPI app entry point
-│   └── requirements.txt
-├── frontend/         # React frontend
-│   ├── src/          # Source code
-│   ├── public/       # Static assets
-│   └── package.json
-└── README.md
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Frontend  │────▶│   Backend   │────▶│  PostgreSQL │
+│   (React)   │     │  (FastAPI)  │     │  Database   │
+│   Port 80   │     │  Port 8000  │     │  Port 5432  │
+└─────────────┘     └─────────────┘     └─────────────┘
+                            │
+                            ▼
+                    ┌─────────────┐
+                    │    Redis    │
+                    │  (Optional) │
+                    └─────────────┘
 ```
 
-### Key Backend Features
-- ✅ **23 Working Routers** - Core HR functionality
-- ✅ **JWT Authentication** - Secure user management
-- ✅ **Error Handling** - Comprehensive error system
-- ✅ **Role-Based Access** - Multi-level permissions
-- ✅ **CORS Support** - Frontend integration ready
+## 🛠️ Technology Stack
 
-### API Endpoints
-- `/auth/*` - Authentication endpoints
-- `/employees/*` - Employee management
-- `/attendance/*` - Attendance tracking
-- `/leave/*` - Leave management
-- `/recruitment/*` - Hiring workflow
-- `/assets/*` - Asset management
-- `/dashboard/*` - Analytics and insights
+### Frontend
+- React 18
+- Vite
+- Tailwind CSS
+- Axios
+- React Router
+- Recharts (for analytics)
+
+### Backend
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- JWT Authentication
+- Pydantic
+- DeepFace (optional, for face recognition)
+- OpenAI/Gemini (optional, for AI features)
+
+### DevOps
+- Docker & Docker Compose
+- Nginx
+- Redis (optional)
+
+## 📦 Project Structure
+
+```
+smart-hr-management-system/
+├── backend/
+│   ├── app/
+│   │   ├── routers/          # API endpoints
+│   │   ├── models.py          # Database models
+│   │   ├── schemas.py         # Pydantic schemas
+│   │   ├── database.py        # Database configuration
+│   │   └── *_service.py       # Business logic services
+│   ├── main.py                # FastAPI application
+│   ├── requirements.txt       # Python dependencies
+│   └── Dockerfile.full        # Docker configuration
+├── frontend/
+│   ├── src/
+│   │   ├── components/        # React components
+│   │   ├── pages/             # Page components
+│   │   ├── api/               # API client
+│   │   └── config/            # Configuration
+│   ├── package.json           # Node dependencies
+│   └── Dockerfile             # Docker configuration
+├── docker-compose.yml         # Docker Compose configuration
+├── deploy.sh                  # Deployment script (Linux/Mac)
+├── deploy.ps1                 # Deployment script (Windows)
+└── README.md                  # This file
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+**Backend (.env):**
+```bash
+DATABASE_URL=postgresql://user:password@host:port/database
+SECRET_KEY=your-secret-key-min-32-chars
+DEBUG=False
+ENVIRONMENT=production
+CORS_ORIGINS=http://your-domain.com
+SMTP_SERVER=smtp.gmail.com
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+```
+
+**Frontend (.env):**
+```bash
+VITE_API_BASE_URL=http://your-domain.com:8000
+```
+
+See `.env.production` for complete configuration template.
+
+## 🧪 Testing
+
+```bash
+# Backend tests
+docker-compose exec backend pytest
+
+# Frontend tests
+docker-compose exec frontend npm test
+
+# Check backend health
+curl http://localhost:8000/health
+```
+
+## 📊 Monitoring
+
+### Health Checks
+- Backend: http://localhost:8000/health
+- Frontend: http://localhost
+- Database: `docker-compose exec postgres pg_isready`
+
+### Logs
+```bash
+# View all logs
+docker-compose logs -f
+
+# View specific service
+docker-compose logs -f backend
+docker-compose logs -f frontend
+```
+
+### Service Status
+```bash
+docker-compose ps
+```
+
+## 🔐 Security
+
+- JWT-based authentication
+- Password hashing with bcrypt
+- Role-based access control (RBAC)
+- SQL injection protection (SQLAlchemy ORM)
+- XSS protection
+- CORS configuration
+- Rate limiting (configurable)
+- Secure session management
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 License
+## 📝 License
 
-This project is licensed under the MIT License.
+[Your License Here]
 
-## 🆘 Support
+## 👥 Support
 
-For support and questions:
-- Check the documentation files
-- Review the API documentation at `/docs`
-- Create an issue in the repository
+For issues and questions:
+- Check [DEPLOYMENT.md](DEPLOYMENT.md) for deployment help
+- Review [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for production setup
+- Check logs: `docker-compose logs -f`
+- Open an issue on GitHub
+
+## 🎯 Roadmap
+
+- [ ] Mobile app (React Native)
+- [ ] Advanced analytics dashboard
+- [ ] Integration with third-party HR tools
+- [ ] Multi-language support
+- [ ] Advanced reporting
+- [ ] Blockchain-based document verification
+- [ ] AI-powered career path recommendations
+
+## 📸 Screenshots
+
+[Add screenshots here]
+
+## 🙏 Acknowledgments
+
+- FastAPI for the amazing backend framework
+- React team for the frontend library
+- All open-source contributors
 
 ---
 
-**Status**: ✅ Production Ready (Mock Data) | 🔄 Database Integration In Progress
-```
-
-### 4. Run the application
-```bash
-cd backend
-python main.py
-```
-
-The API will be available at `http://localhost:8000`
-
-## 📚 API Documentation
-
-Once running, visit:
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
-
-## 🌐 Deployment
-
-This backend is ready for deployment on:
-- **Vercel** (Recommended)
-- **Railway**
-- **Heroku**
-- **AWS Lambda**
-
-### Deploy to Vercel
-1. Install Vercel CLI: `npm i -g vercel`
-2. Run: `vercel` in the backend directory
-3. Set environment variables in Vercel dashboard
-
-## 🔧 Environment Variables
-
-Required environment variables:
-
-```env
-DATABASE_URL=postgresql://user:password@host:port/database
-SECRET_KEY=your-jwt-secret-key
-ENVIRONMENT=production
-DEBUG=False
-```
-
-Optional (for enhanced features):
-```env
-OPENAI_API_KEY=your-openai-key
-GEMINI_API_KEY=your-gemini-key
-SMTP_SERVER=smtp.gmail.com
-SMTP_USERNAME=your-email
-SMTP_PASSWORD=your-password
-```
-
-## 📁 Project Structure
-
-```
-backend/
-├── app/
-│   ├── routers/          # API route handlers
-│   ├── models.py         # Database models
-│   ├── schemas.py        # Pydantic schemas
-│   ├── database.py       # Database configuration
-│   └── services/         # Business logic services
-├── main.py              # FastAPI application entry point
-├── requirements.txt     # Python dependencies
-└── vercel.json         # Vercel deployment config
-```
-
-## 🔐 Security Features
-
-- JWT token authentication
-- Password hashing with bcrypt
-- CORS protection
-- Input validation with Pydantic
-- SQL injection prevention with SQLAlchemy ORM
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a merge request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue on GitLab
-- Check the API documentation at `/docs`
-- Review the deployment guide in `DEPLOYMENT_GUIDE.md`
+**Version:** 1.0.0  
+**Last Updated:** 2024  
+**Status:** Production Ready ✅

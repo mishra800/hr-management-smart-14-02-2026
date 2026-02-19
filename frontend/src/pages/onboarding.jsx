@@ -809,17 +809,6 @@ export default function Onboarding() {
           onClose={() => setShowTimeline(false)}
         />
       )}
-
-      {/* Debug panel for development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 right-4 bg-gray-800 text-white p-3 rounded text-xs max-w-xs">
-          <div>Loading: {loading.toString()}</div>
-          <div>Error: {error || 'none'}</div>
-          <div>Employee: {employee?.first_name || 'none'}</div>
-          <div>Show Form: {showEmployeeForm.toString()}</div>
-          <div>Form Completed: {employeeFormCompleted.toString()}</div>
-        </div>
-      )}
     </div>
   );
 }

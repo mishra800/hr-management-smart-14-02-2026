@@ -196,25 +196,25 @@ async def submit_candidate(
         raise HTTPException(status_code=403, detail="Agency not found or inactive")
     
     # Verify job exists and is active
-    job = db.query(models.Job).filter(
-        models.Job.id == data.job_id,
-        models.Job.is_active == True
+    job = db.query(models.JobPosting).filter(
+        models.JobPosting.id == data.job_id,
+        models.JobPosting.is_active == True
     ).first()
     
     if not job:
         raise HTTPException(status_code=404, detail="Job not found or inactive")
     
     # Check if candidate already applied
-    existing_app = db.query(models.Application).filter(
-        models.Application.job_id == data.job_id,
-        models.Application.candidate_email == data.candidate_email
+    existing_app = db.query(models.JobApplication).filter(
+        models.JobApplication.job_id == data.job_id,
+        models.JobApplication.candidate_email == data.candidate_email
     ).first()
     
     if existing_app:
         raise HTTPException(status_code=400, detail="Candidate already applied for this job")
     
     # Create application
-    application = models.Application(
+    application = models.JobApplication(
         job_id=data.job_id,
         candidate_name=data.candidate_name,
         candidate_email=data.candidate_email,
@@ -273,7 +273,7 @@ async def get_agency_submissions(
         query = query.filter(models.AgencySubmission.job_id == job_id)
     
     if status:
-        query = query.join(models.Application).filter(models.Application.status == status)
+        query = query.join(models.JobApplication).filter(models.JobApplication.status == status)
     
     total = query.count()
     submissions = query.order_by(models.AgencySubmission.submitted_date.desc()).offset(skip).limit(limit).all()
@@ -315,9 +315,9 @@ async def get_available_jobs_for_agency(
         raise HTTPException(status_code=403, detail="Agency not found or inactive")
     
     # Get active jobs
-    jobs = db.query(models.Job).filter(
-        models.Job.is_active == True,
-        models.Job.requisition_status == "published"
+    jobs = db.query(models.JobPosting).filter(
+        models.JobPosting.is_active == True,
+        models.JobPosting.requisition_status == "published"
     ).all()
     
     result = []
@@ -357,8 +357,8 @@ async def get_pending_commissions(
     
     query = db.query(models.AgencySubmission).filter(
         models.AgencySubmission.commission_paid == False
-    ).join(models.Application).filter(
-        models.Application.status == 'hired'
+    ).join(models.JobApplication).filter(
+        models.JobApplication.status == 'hired'
     )
     
     if agency_id:

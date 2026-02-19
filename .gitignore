@@ -1,3 +1,8 @@
+# Environment variables
+.env
+backend/.env
+frontend/.env
+
 # Python
 __pycache__/
 *.py[cod]
@@ -20,14 +25,9 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
-*.log
-.env
-.venv
-env/
 venv/
 ENV/
-env.bak/
-venv.bak/
+env/
 
 # Node
 node_modules/
@@ -35,9 +35,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-dist/
-dist-ssr/
-*.local
+frontend/dist/
+frontend/build/
 
 # IDEs
 .vscode/
@@ -47,28 +46,22 @@ dist-ssr/
 *~
 .DS_Store
 
+# Logs
+*.log
+logs/
+backend/logs/
+
 # Database
 *.db
 *.sqlite
 *.sqlite3
 
 # Uploads
-uploads/
 backend/uploads/
 frontend/public/uploads/
 
-# Environment
-.env
-.env.local
-.env.*.local
-
-# Build
-build/
-.cache/
-
-# Logs
-logs/
-*.log
+# Docker
+.dockerignore
 
 # OS
 Thumbs.db
@@ -77,4 +70,33 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
-project_structure.txt
+*.bak
+*.backup
+
+# Test coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Secrets
+*.pem
+*.key
+*.cert
+secrets/
+
+# Local development
+.local/
+local/

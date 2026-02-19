@@ -765,8 +765,8 @@ class NotificationService:
     ):
         """Notify candidate that application was received"""
         
-        app = self.db.query(models.Application).filter(
-            models.Application.id == application_id
+        app = self.db.query(models.JobApplication).filter(
+            models.JobApplication.id == application_id
         ).first()
         
         if not app:
@@ -806,8 +806,8 @@ Recruitment Team
     ):
         """Notify HR/Admin about new job application with detailed information"""
         
-        app = self.db.query(models.Application).filter(
-            models.Application.id == application_id
+        app = self.db.query(models.JobApplication).filter(
+            models.JobApplication.id == application_id
         ).first()
         
         if not app:
@@ -930,8 +930,8 @@ https://yourapp.com/recruitment
     ):
         """Enhanced notification for application status changes"""
         
-        app = self.db.query(models.Application).filter(
-            models.Application.id == application_id
+        app = self.db.query(models.JobApplication).filter(
+            models.JobApplication.id == application_id
         ).first()
         
         if not app:
@@ -975,8 +975,8 @@ https://yourapp.com/recruitment
         
         # Get applications from last 24 hours
         yesterday = datetime.utcnow() - timedelta(days=1)
-        recent_applications = self.db.query(models.Application).filter(
-            models.Application.applied_date >= yesterday
+        recent_applications = self.db.query(models.JobApplication).filter(
+            models.JobApplication.applied_date >= yesterday
         ).all()
         
         if not recent_applications:
@@ -1107,8 +1107,8 @@ Recruitment Team
     ):
         """Notify candidate about application status change"""
         
-        app = self.db.query(models.Application).filter(
-            models.Application.id == application_id
+        app = self.db.query(models.JobApplication).filter(
+            models.JobApplication.id == application_id
         ).first()
         
         if not app:
@@ -1151,8 +1151,8 @@ Recruitment Team
     ):
         """Notify candidate to upload required documents"""
         
-        app = self.db.query(models.Application).filter(
-            models.Application.id == application_id
+        app = self.db.query(models.JobApplication).filter(
+            models.JobApplication.id == application_id
         ).first()
         
         if not app:

@@ -20,9 +20,8 @@ def get_insights(db: Session = Depends(database.get_db)):
     if not top_performers:
         top_performers = ["No data available"]
 
-    # 2. Employee Sentiment (AI Analysis of Reviews & Feedback)
+    # 2. Employee Sentiment (AI Analysis of Reviews)
     reviews = db.query(models.PerformanceReview).all()
-    feedbacks = db.query(models.Feedback).all()
     
     total_sentiment = 0
     count = 0
@@ -31,13 +30,6 @@ def get_insights(db: Session = Depends(database.get_db)):
     for review in reviews:
         if review.comments:
             sentiment = ai_utils.analyze_sentiment(review.comments)
-            total_sentiment += sentiment["score"]
-            count += 1
-            
-    # Analyze feedbacks
-    for feedback in feedbacks:
-        if feedback.content:
-            sentiment = ai_utils.analyze_sentiment(feedback.content)
             total_sentiment += sentiment["score"]
             count += 1
             
@@ -89,7 +81,7 @@ def get_insights(db: Session = Depends(database.get_db)):
     # 4. Hiring Velocity (Simple Metric)
     # Count applications in last 30 days
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    recent_apps = db.query(models.Application).filter(models.Application.applied_date >= thirty_days_ago).count()
+    recent_apps = db.query(models.JobApplication).filter(models.JobApplication.applied_date >= thirty_days_ago).count()
     
     hiring_velocity = "Low"
     if recent_apps > 20:

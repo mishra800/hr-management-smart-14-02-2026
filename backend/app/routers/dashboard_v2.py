@@ -181,10 +181,10 @@ def get_candidate_dashboard_stats(
         from sqlalchemy.orm import joinedload
         
         # My applications with job details
-        my_applications = db.query(models.Application).options(
-            joinedload(models.Application.job)
+        my_applications = db.query(models.JobApplication).options(
+            joinedload(models.JobApplication.job)
         ).filter(
-            models.Application.candidate_id == current_user.id
+            models.JobApplication.candidate_id == current_user.id
         ).all()
         
         application_stats = {

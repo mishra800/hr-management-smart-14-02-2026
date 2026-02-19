@@ -262,7 +262,7 @@ def get_payroll_summary(
 @router.get("/reports/monthly")
 def get_monthly_payroll_report(
     month: str,
-    format: str = Query("json", regex="^(json|excel)$"),
+    format: str = Query("json", pattern="^(json|excel)$"),
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(require_role(["admin", "hr", "hr_manager", "super_admin"]))
 ):

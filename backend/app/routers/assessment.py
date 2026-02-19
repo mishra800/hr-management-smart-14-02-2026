@@ -54,7 +54,7 @@ async def create_assessment(
     """Admin creates an assessment for a job"""
     
     # Verify job exists
-    job = db.query(models.Job).filter(models.Job.id == data.job_id).first()
+    job = db.query(models.JobPosting).filter(models.JobPosting.id == data.job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
@@ -88,8 +88,8 @@ async def assign_assessment_to_candidate(
     """Admin assigns assessment to a candidate"""
     
     # Verify application exists
-    application = db.query(models.Application).filter(
-        models.Application.id == application_id
+    application = db.query(models.JobApplication).filter(
+        models.JobApplication.id == application_id
     ).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")

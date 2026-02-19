@@ -75,16 +75,16 @@ async def process_resume_file(
             raise Exception("Email not found in resume")
         
         # Check if candidate already applied
-        existing = db.query(models.Application).filter(
-            models.Application.job_id == job_id,
-            models.Application.candidate_email == parsed_data["email"]
+        existing = db.query(models.JobApplication).filter(
+            models.JobApplication.job_id == job_id,
+            models.JobApplication.candidate_email == parsed_data["email"]
         ).first()
         
         if existing:
             raise Exception("Candidate already applied for this job")
         
         # Create application
-        application = models.Application(
+        application = models.JobApplication(
             job_id=job_id,
             candidate_name=parsed_data.get("name", "Unknown"),
             candidate_email=parsed_data["email"],
@@ -147,7 +147,7 @@ async def bulk_upload_resumes(
     """Upload multiple resumes at once"""
     
     # Verify job exists
-    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    job = db.query(models.JobPosting).filter(models.JobPosting.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     

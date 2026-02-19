@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import api from '../api/axios';
+import API_BASE_URL from '../config/api';
 
 export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
   const [uploading, setUploading] = useState(false);
@@ -181,7 +182,7 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
           <img 
             src={currentImage.startsWith('data:') || currentImage.startsWith('http') || currentImage.startsWith('/') 
               ? currentImage 
-              : `${import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000'}${currentImage}`
+              : `${API_BASE_URL}${currentImage}`
             } 
             alt="Profile" 
             className="w-32 h-32 rounded-full mx-auto border-4 border-gray-200 object-cover"

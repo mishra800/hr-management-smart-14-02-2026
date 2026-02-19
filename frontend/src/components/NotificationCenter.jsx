@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X, Check, AlertCircle, Info, CheckCircle, AlertTriangle } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 const NotificationCenter = () => {
   const [notifications, setNotifications] = useState([]);
@@ -120,8 +121,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
-      const response = await fetch(`${baseURL}/notifications/`, {
+      const response = await fetch(`${API_BASE_URL}/notifications/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -153,8 +153,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
-      const response = await fetch(`${baseURL}/notifications/unread-count`, {
+      const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -183,8 +182,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
-      const response = await fetch(`${baseURL}/notifications/${notificationId}/read`, {
+      const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -219,8 +217,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
-      const response = await fetch(`${baseURL}/notifications/mark-all-read`, {
+      const response = await fetch(`${API_BASE_URL}/notifications/mark-all-read`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -251,8 +248,7 @@ const NotificationCenter = () => {
         return;
       }
 
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
-      const response = await fetch(`${baseURL}/notifications/${notificationId}`, {
+      const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

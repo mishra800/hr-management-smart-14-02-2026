@@ -265,7 +265,8 @@ def sanitize_input(text: str) -> str:
 async def send_verification_email(email: str, token: str):
     """Send email verification email"""
     # TODO: Implement with actual email service (SendGrid, AWS SES, etc.)
-    verification_link = f"http://localhost:5173/verify-email?token={token}"
+    app_base_url = os.getenv("APP_BASE_URL", "http://localhost:5173")
+    verification_link = f"{app_base_url}/verify-email?token={token}"
     print(f"Verification email would be sent to {email}")
     print(f"Link: {verification_link}")
     return True
@@ -273,7 +274,8 @@ async def send_verification_email(email: str, token: str):
 async def send_password_reset_email(email: str, token: str):
     """Send password reset email"""
     # TODO: Implement with actual email service
-    reset_link = f"http://localhost:5173/reset-password?token={token}"
+    app_base_url = os.getenv("APP_BASE_URL", "http://localhost:5173")
+    reset_link = f"{app_base_url}/reset-password?token={token}"
     print(f"Password reset email would be sent to {email}")
     print(f"Link: {reset_link}")
     return True

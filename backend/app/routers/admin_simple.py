@@ -20,8 +20,8 @@ router = APIRouter(
 # Pydantic Models for structured data validation
 class SystemSettingsGeneral(BaseModel):
     company_name: str = Field(..., min_length=1, max_length=100)
-    timezone: str = Field(..., regex=r'^[A-Za-z_/]+$')
-    date_format: str = Field(..., regex=r'^[A-Z\-/]+$')
+    timezone: str = Field(..., pattern=r'^[A-Za-z_/]+$')
+    date_format: str = Field(..., pattern=r'^[A-Z\-/]+$')
     currency: str = Field(..., min_length=3, max_length=3)
     language: str = Field(..., min_length=2, max_length=5)
 
@@ -41,9 +41,9 @@ class SystemSettingsNotifications(BaseModel):
 
 class SystemSettingsBackup(BaseModel):
     auto_backup: bool
-    backup_frequency: str = Field(..., regex=r'^(daily|weekly|monthly)$')
+    backup_frequency: str = Field(..., pattern=r'^(daily|weekly|monthly)$')
     backup_retention_days: int = Field(..., ge=1, le=365)
-    backup_location: str = Field(..., regex=r'^(local|cloud|both)$')
+    backup_location: str = Field(..., pattern=r'^(local|cloud|both)$')
 
 class SystemSettingsUpdate(BaseModel):
     general: Optional[SystemSettingsGeneral] = None

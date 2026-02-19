@@ -86,7 +86,7 @@ router_manager = RouterManager()
 
 # Core routers that must load successfully
 CORE_ROUTERS = [
-    'auth',
+    'auth',  # Original auth router
     'users', 
     'employees',
     'attendance',
@@ -160,6 +160,9 @@ def setup_cors():
         "http://localhost:5173",
         "http://localhost:5174", 
         "http://localhost:5175",
+        "http://192.168.20.122:5173",
+        "http://192.168.20.122:5174",
+        "http://192.168.20.122:5175",
         "https://dhanush-hr.netlify.app",
     ]
     
@@ -213,6 +216,59 @@ def read_root():
         "loaded_routers": len(router_manager.loaded_routers),
         "timestamp": datetime.now().isoformat()
     }
+
+# Direct auth endpoints (workaround for router loading issues)
+from fastapi import Form, HTTPException, status as http_status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import text
+from app.auth_utils import verify_password, create_access_token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
+
+@app.post("/auth/login")
+async def direct_login(username: str = Form(...), password: str = Form(...)):
+    """Direct login endpoint"""
+    try:
+        logger.info(f"Direct login attempt for: {username}")
+        with engine.connect() as conn:
+            query = text("""
+                SELECT id, email, hashed_password, role, is_active, full_name
+                FROM users
+                WHERE email = :email
+            """)
+            result = conn.execute(query, {"email": username})
+            user = result.fetchone()
+            
+            if not user:
+                raise HTTPException(
+                    status_code=http_status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            if not verify_password(password, user[2]):
+                raise HTTPException(
+                    status_code=http_status.HTTP_401_UNAUTHORIZED,
+                    detail="Incorrect password",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            if not user[4]:
+                raise HTTPException(
+                    status_code=http_status.HTTP_401_UNAUTHORIZED,
+                    detail="Account is inactive",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            access_token = create_access_token(
+                data={"sub": user[1]}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            )
+            
+            logger.info(f"Login successful for: {username}")
+            return {"access_token": access_token, "token_type": "bearer"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health")
 def health_check():
@@ -284,11 +340,23 @@ for router_name, alias in SIMPLE_ROUTERS:
 uploads_dir = "uploads"
 try:
     if not os.path.exists(uploads_dir):
-        os.makedirs(uploads_dir)
-    app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
-    logger.info("✓ Static files mounted: /uploads")
+        os.makedirs(uploads_dir, exist_ok=True)
+        logger.info(f"✓ Created uploads directory: {uploads_dir}")
+    
+    # Try to mount static files
+    try:
+        app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+        logger.info("✓ Static files mounted: /uploads")
+    except Exception as mount_error:
+        logger.warning(f"⚠ Could not mount uploads directory: {mount_error}")
+        logger.info("ℹ️  Uploads will be handled without static file mounting")
+        
+except PermissionError as pe:
+    logger.warning(f"⚠ Permission denied creating uploads directory: {pe}")
+    logger.info("ℹ️  Application will continue without uploads directory")
 except Exception as e:
-    logger.error(f"✗ Failed to setup uploads directory: {e}")
+    logger.warning(f"⚠ Failed to setup uploads directory: {e}")
+    logger.info("ℹ️  Application will continue without uploads directory")
 
 # Log final summary
 final_summary = router_manager.get_summary()

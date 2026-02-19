@@ -59,12 +59,12 @@ class PerformanceService:
             present_days = len([a for a in attendance_records if a.status == "present"])
             attendance_score = (present_days / len(attendance_records)) * 100
         
-        # 4. Feedback Sentiment Score (15% weight)
-        feedbacks = db.query(models.Feedback).filter(
-            models.Feedback.employee_id == employee_id,
-            models.Feedback.created_at >= start_date
-        ).all()
-        
+        # 4. Feedback Sentiment Score (15% weight) - Commented out as Feedback model doesn't exist
+        # feedbacks = db.query(models.Feedback).filter(
+        #     models.Feedback.employee_id == employee_id,
+        #     models.Feedback.created_at >= start_date
+        # ).all()
+        feedback_score = 0.7  # Default neutral score
         sentiment_score = 50  # Neutral baseline
         if feedbacks:
             # Calculate average sentiment (assuming sentiment analysis is done)

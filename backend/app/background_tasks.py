@@ -82,8 +82,8 @@ class BackgroundTaskManager:
             week_ago = datetime.utcnow() - timedelta(days=7)
             
             # Applications this week
-            weekly_applications = db.query(models.Application).filter(
-                models.Application.applied_date >= week_ago
+            weekly_applications = db.query(models.JobApplication).filter(
+                models.JobApplication.applied_date >= week_ago
             ).all()
             
             # Group by job
@@ -227,9 +227,9 @@ Applications by Position:
                     # Check for applications in 'applied' status for more than 3 days
                     three_days_ago = datetime.utcnow() - timedelta(days=3)
                     
-                    stale_applications = db.query(models.Application).filter(
-                        models.Application.status == 'applied',
-                        models.Application.applied_date <= three_days_ago
+                    stale_applications = db.query(models.JobApplication).filter(
+                        models.JobApplication.status == 'applied',
+                        models.JobApplication.applied_date <= three_days_ago
                     ).all()
                     
                     if stale_applications:

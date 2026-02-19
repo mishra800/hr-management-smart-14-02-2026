@@ -26,7 +26,7 @@ async def get_application_comments(
 ):
     """Get all comments for an application"""
     # Check if application exists
-    app = db.query(models.Application).filter(models.Application.id == application_id).first()
+    app = db.query(models.JobApplication).filter(models.JobApplication.id == application_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
     
@@ -41,7 +41,7 @@ async def add_application_comment(
     db: Session = Depends(database.get_db)
 ):
     """Add a comment to an application"""
-    app = db.query(models.Application).filter(models.Application.id == application_id).first()
+    app = db.query(models.JobApplication).filter(models.JobApplication.id == application_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
     
@@ -55,7 +55,7 @@ async def get_application_history(
     db: Session = Depends(database.get_db)
 ):
     """Get stage change history for an application"""
-    app = db.query(models.Application).filter(models.Application.id == application_id).first()
+    app = db.query(models.JobApplication).filter(models.JobApplication.id == application_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
     
@@ -79,7 +79,7 @@ async def update_application_tags(
     db: Session = Depends(database.get_db)
 ):
     """Update tags for an application"""
-    app = db.query(models.Application).filter(models.Application.id == application_id).first()
+    app = db.query(models.JobApplication).filter(models.JobApplication.id == application_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
     
@@ -95,7 +95,7 @@ async def toggle_application_star(
     db: Session = Depends(database.get_db)
 ):
     """Star/unstar an application"""
-    app = db.query(models.Application).filter(models.Application.id == application_id).first()
+    app = db.query(models.JobApplication).filter(models.JobApplication.id == application_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
     
@@ -117,8 +117,8 @@ async def bulk_action_applications(
     if not application_ids:
         raise HTTPException(status_code=400, detail="No applications selected")
     
-    applications = db.query(models.Application).filter(
-        models.Application.id.in_(application_ids)
+    applications = db.query(models.JobApplication).filter(
+        models.JobApplication.id.in_(application_ids)
     ).all()
     
     if action == "shortlist":
@@ -152,16 +152,16 @@ async def get_pipeline_metrics(
     db: Session = Depends(database.get_db)
 ):
     """Get pipeline metrics"""
-    query = db.query(models.Application)
+    query = db.query(models.JobApplication)
     
     if job_id:
-        query = query.filter(models.Application.job_id == job_id)
+        query = query.filter(models.JobApplication.job_id == job_id)
     
     if start_date:
-        query = query.filter(models.Application.applied_date >= start_date)
+        query = query.filter(models.JobApplication.applied_date >= start_date)
     
     if end_date:
-        query = query.filter(models.Application.applied_date <= end_date)
+        query = query.filter(models.JobApplication.applied_date <= end_date)
     
     applications = query.all()
     
@@ -191,12 +191,12 @@ async def get_time_to_hire_metrics(
     db: Session = Depends(database.get_db)
 ):
     """Calculate time-to-hire metrics"""
-    query = db.query(models.Application).filter(
-        models.Application.status == 'hired'
+    query = db.query(models.JobApplication).filter(
+        models.JobApplication.status == 'hired'
     )
     
     if job_id:
-        query = query.filter(models.Application.job_id == job_id)
+        query = query.filter(models.JobApplication.job_id == job_id)
     
     hired_applications = query.all()
     
@@ -234,13 +234,13 @@ async def get_source_effectiveness(
     db: Session = Depends(database.get_db)
 ):
     """Analyze effectiveness of different candidate sources"""
-    query = db.query(models.Application)
+    query = db.query(models.JobApplication)
     
     if start_date:
-        query = query.filter(models.Application.applied_date >= start_date)
+        query = query.filter(models.JobApplication.applied_date >= start_date)
     
     if end_date:
-        query = query.filter(models.Application.applied_date <= end_date)
+        query = query.filter(models.JobApplication.applied_date <= end_date)
     
     applications = query.all()
     
@@ -284,10 +284,10 @@ async def get_conversion_rates(
     db: Session = Depends(database.get_db)
 ):
     """Calculate conversion rates between stages"""
-    query = db.query(models.Application)
+    query = db.query(models.JobApplication)
     
     if job_id:
-        query = query.filter(models.Application.job_id == job_id)
+        query = query.filter(models.JobApplication.job_id == job_id)
     
     applications = query.all()
     
@@ -331,7 +331,7 @@ async def send_application_email(
     db: Session = Depends(database.get_db)
 ):
     """Send email to candidate"""
-    app = db.query(models.Application).filter(models.Application.id == application_id).first()
+    app = db.query(models.JobApplication).filter(models.JobApplication.id == application_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
     
@@ -368,8 +368,8 @@ async def get_candidate_applications(
     db: Session = Depends(database.get_db)
 ):
     """Get all applications for a candidate (for candidate portal)"""
-    applications = db.query(models.Application).filter(
-        models.Application.candidate_email == email
+    applications = db.query(models.JobApplication).filter(
+        models.JobApplication.candidate_email == email
     ).all()
     
     return applications
@@ -381,9 +381,9 @@ async def get_candidate_application_detail(
     db: Session = Depends(database.get_db)
 ):
     """Get detailed application info for candidate"""
-    app = db.query(models.Application).filter(
-        models.Application.id == application_id,
-        models.Application.candidate_email == email
+    app = db.query(models.JobApplication).filter(
+        models.JobApplication.id == application_id,
+        models.JobApplication.candidate_email == email
     ).first()
     
     if not app:

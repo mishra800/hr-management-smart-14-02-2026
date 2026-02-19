@@ -312,51 +312,6 @@ export default function CandidateReviewModal({ application, onClose, onStatusUpd
               >
                 💾 Download
               </button>
-              <button
-                onClick={async () => {
-                  const fileName = application.resume_url?.split('/').pop() || application.resume_url?.split('\\').pop();
-                  let debugInfo = `Debug Info for ${application.candidate_name}:\n\n`;
-                  
-                  // Test API endpoint
-                  try {
-                    const apiResponse = await fetch(`/api/recruitment/applications/${application.id}/debug`);
-                    if (apiResponse.ok) {
-                      const debug = await apiResponse.json();
-                      debugInfo += `Backend Debug:\n`;
-                      debugInfo += `- File exists: ${debug.file_exists}\n`;
-                      debugInfo += `- Path: ${debug.resume_url}\n`;
-                      debugInfo += `- Absolute: ${debug.resume_url_absolute}\n`;
-                      debugInfo += `- Working Dir: ${debug.current_working_directory}\n\n`;
-                    } else {
-                      debugInfo += `Backend Debug: API failed (${apiResponse.status})\n\n`;
-                    }
-                  } catch (err) {
-                    debugInfo += `Backend Debug: Error - ${err.message}\n\n`;
-                  }
-                  
-                  // Test direct file access
-                  const directUrl = `/uploads/resumes/${fileName}`;
-                  try {
-                    const directResponse = await fetch(directUrl, { method: 'HEAD' });
-                    debugInfo += `Direct File Access:\n`;
-                    debugInfo += `- URL: ${directUrl}\n`;
-                    debugInfo += `- Status: ${directResponse.status}\n`;
-                    debugInfo += `- Accessible: ${directResponse.ok ? 'Yes' : 'No'}\n\n`;
-                  } catch (err) {
-                    debugInfo += `Direct File Access: Error - ${err.message}\n\n`;
-                  }
-                  
-                  debugInfo += `Application Data:\n`;
-                  debugInfo += `- ID: ${application.id}\n`;
-                  debugInfo += `- Resume URL: ${application.resume_url}\n`;
-                  debugInfo += `- Filename: ${fileName}`;
-                  
-                  alert(debugInfo);
-                }}
-                className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700"
-              >
-                🔍 Debug
-              </button>
             </div>
           </div>
           
