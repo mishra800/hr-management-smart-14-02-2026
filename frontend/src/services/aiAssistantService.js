@@ -7,6 +7,7 @@ function getApiBaseUrl() {
   
   // 2. Auto-detect based on hostname
   const hostname = window.location.hostname;
+  const port = window.location.port;
   
   // If accessing via IP address, use that IP
   if (hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
@@ -18,8 +19,8 @@ function getApiBaseUrl() {
     return 'http://localhost:8000';
   }
   
-  // Production fallback
-  return 'http://192.168.20.122:8000';
+  // For any other hostname, assume backend is on same host, port 8000
+  return `http://${hostname}:8000`;
 }
 
 const API_BASE_URL = getApiBaseUrl();

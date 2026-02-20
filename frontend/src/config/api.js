@@ -21,8 +21,8 @@ function getApiBaseUrl() {
     return 'http://localhost:8000';
   }
   
-  // 3. Fallback to IP address (for network access)
-  return 'http://192.168.20.122:8000';
+  // For any other hostname (production domain, etc.), use same host with port 8000
+  return `http://${hostname}:8000`;
 }
 
 export const API_BASE_URL = getApiBaseUrl();
