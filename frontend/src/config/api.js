@@ -23,8 +23,8 @@ function getApiBaseUrl() {
   
   // If on production domain (Netlify, custom domain, etc.)
   if (hostname.includes('netlify.app') || hostname.includes('dhanush')) {
-    // Use production API URL - update this with your production backend URL
-    return 'https://your-production-api.com';  // TODO: Update with actual production API
+    // Use production API URL - configure in .env as VITE_API_BASE_URL for production
+    return 'http://192.168.20.122:8000';  // Fallback to IP if not configured
   }
   
   // 3. Fallback to IP address (for network access)

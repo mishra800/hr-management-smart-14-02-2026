@@ -140,7 +140,7 @@ class AIAssistantService {
   getSessionId() {
     let sessionId = sessionStorage.getItem('ai_session_id');
     if (!sessionId) {
-      sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
       sessionStorage.setItem('ai_session_id', sessionId);
     }
     return sessionId;

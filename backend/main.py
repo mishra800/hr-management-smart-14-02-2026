@@ -203,6 +203,11 @@ def setup_cors():
     logger.info(f"CORS Origins: {origins}")
     
     return origins
+    
+    logger.info(f"CORS Configuration: Environment={environment}, Origins={len(origins)} configured")
+    logger.info(f"CORS Origins: {origins}")
+    
+    return origins
 
 # Setup CORS
 cors_origins = setup_cors()
