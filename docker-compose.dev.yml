@@ -32,7 +32,7 @@ services:
       SECRET_KEY: dev-secret-key-not-for-production
       DEBUG: "True"
       ENVIRONMENT: development
-      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:5174
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:5174,http://192.168.20.122:3000,http://192.168.20.122:5173,http://192.168.20.122:5174,http://192.168.20.122:8000
     ports:
       - "8000:8000"
     volumes:
@@ -51,7 +51,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     environment:
-      VITE_API_BASE_URL: http://localhost:8000
+      VITE_API_BASE_URL: http://192.168.20.122:8000
     ports:
       - "5173:5173"
     volumes:

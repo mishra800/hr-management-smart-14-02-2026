@@ -20,7 +20,7 @@ router = APIRouter(
 )
 
 # Get app base URL from environment
-APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
+APP_BASE_URL = os.getenv("APP_BASE_URL", "http://192.168.20.122:3000")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
