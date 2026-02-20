@@ -156,15 +156,16 @@ def setup_cors():
     """Setup CORS with security considerations"""
     # Default secure origins
     origins = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174", 
-        "http://localhost:5175",
-        "http://192.168.20.122:3000",
-        "http://192.168.20.122:5173",
-        "http://192.168.20.122:5174",
-        "http://192.168.20.122:5175",
-        "http://192.168.20.122:8000",
+        # Local development
+        "http://localhost:5173",        # Vite dev server (primary)
+        "http://localhost:5174",        # Vite alternate port
+        
+        # Network access (for testing from other devices)
+        "http://192.168.20.122:5173",   # Your IP - Vite dev server
+        "http://192.168.20.122:5174",   # Your IP - Vite alternate
+        "http://192.168.20.122:3000",   # Your IP - production port
+        
+        # Production deployment
         "https://dhanush-hr.netlify.app",
     ]
     
