@@ -1,5 +1,5 @@
 // Centralized API configuration
-// Always use the network IP for API calls, regardless of how frontend is accessed
-export const API_BASE_URL = 'http://192.168.20.122:8000';
+// Always use environment variable for API URL
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export default API_BASE_URL;

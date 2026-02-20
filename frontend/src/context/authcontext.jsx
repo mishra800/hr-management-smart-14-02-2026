@@ -99,15 +99,19 @@ export const AuthProvider = ({ children }) => {
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
       
-      // Set a temporary user object so we can navigate immediately
-      setUser({ email, token: access_token });
+      // Fetch full user data immediately before returning
+      const userData = await fetchUser();
       
-      // Fetch full user data in background, don't wait for it
-      setTimeout(() => {
-        fetchUser().catch(err => console.error('Failed to fetch user:', err));
-      }, 100);
-      
-      return true;
+      if (userData) {
+        return true;
+      } else {
+        // If fetch failed, set temporary user and try again in background
+        setUser({ email, token: access_token });
+        setTimeout(() => {
+          fetchUser().catch(err => console.error('Failed to fetch user:', err));
+        }, 100);
+        return true;
+      }
     } catch (error) {
       console.error('Login failed:', error);
       return false;

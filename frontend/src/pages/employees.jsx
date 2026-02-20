@@ -464,7 +464,8 @@ export default function Employees() {
             <div className="flex space-x-3">
               <button
                 onClick={() => {
-                  const text = `Login Credentials\n\nEmail: ${generatedCredentials.email}\nPassword: ${generatedCredentials.password}\nRole: ${generatedCredentials.role}\n\nLogin URL: http://localhost:5173/login`;
+                  const loginUrl = window.location.origin + '/login';
+                  const text = `Login Credentials\n\nEmail: ${generatedCredentials.email}\nPassword: ${generatedCredentials.password}\nRole: ${generatedCredentials.role}\n\nLogin URL: ${loginUrl}`;
                   navigator.clipboard.writeText(text);
                   alert('All credentials copied to clipboard!');
                 }}

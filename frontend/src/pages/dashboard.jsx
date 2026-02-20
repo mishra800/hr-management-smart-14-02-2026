@@ -50,7 +50,15 @@ export default function Dashboard() {
       // Fetch recent activities with fallback
       try {
         const activitiesResponse = await api.get('/dashboard/activities');
-        setRecentActivities(activitiesResponse.data);
+        const activitiesData = activitiesResponse.data;
+        // Ensure we always set an array
+        if (Array.isArray(activitiesData)) {
+          setRecentActivities(activitiesData);
+        } else if (activitiesData && Array.isArray(activitiesData.data)) {
+          setRecentActivities(activitiesData.data);
+        } else {
+          setRecentActivities([]);
+        }
       } catch (error) {
         console.error('Activities API failed, using mock data:', error);
         setRecentActivities([
@@ -63,16 +71,34 @@ export default function Dashboard() {
       // Fetch notifications with fallback
       try {
         const notificationsResponse = await api.get('/dashboard/notifications');
-        setNotifications(notificationsResponse.data);
+        const notifData = notificationsResponse.data;
+        // Ensure we always set an array
+        if (Array.isArray(notifData)) {
+          setNotifications(notifData);
+        } else if (notifData && Array.isArray(notifData.data)) {
+          setNotifications(notifData.data);
+        } else {
+          setNotifications([]);
+        }
       } catch (error) {
+        console.error('Notifications API failed:', error);
         setNotifications([]);
       }
       
       // Fetch calendar events with fallback
       try {
         const calendarResponse = await api.get('/dashboard/calendar');
-        setCalendarEvents(calendarResponse.data);
+        const calendarData = calendarResponse.data;
+        // Ensure we always set an array
+        if (Array.isArray(calendarData)) {
+          setCalendarEvents(calendarData);
+        } else if (calendarData && Array.isArray(calendarData.data)) {
+          setCalendarEvents(calendarData.data);
+        } else {
+          setCalendarEvents([]);
+        }
       } catch (error) {
+        console.error('Calendar API failed, using mock data:', error);
         setCalendarEvents([
           { id: 1, title: 'Team Meeting', time: '10:00 AM', date: 'Today' },
           { id: 2, title: 'Interview - Jane Smith', time: '2:00 PM', date: 'Today' }
@@ -287,7 +313,7 @@ export default function Dashboard() {
         )}
 
         {/* Notifications Banner */}
-        {notifications.length > 0 && (
+        {Array.isArray(notifications) && notifications.length > 0 && (
           <div className="mb-6 space-y-3">
             {notifications.map((notification, index) => (
               <div key={index} className={`p-4 rounded-lg border-l-4 ${
@@ -389,7 +415,7 @@ export default function Dashboard() {
               <Link to="/recruitment" className="p-4 border rounded-lg hover:bg-gray-50 text-center relative">
                 <span className="block text-2xl mb-2">📢</span>
                 <span className="text-sm font-medium">Recruitment</span>
-                {notifications.some(n => n.action_url === '/recruitment') && (
+                {Array.isArray(notifications) && notifications.some(n => n.action_url === '/recruitment') && (
                   <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {notifications.filter(n => n.action_url === '/recruitment').reduce((sum, n) => sum + (n.count || 1), 0)}
                   </span>

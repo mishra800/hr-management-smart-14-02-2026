@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 if not DATABASE_URL:
     print("✗ FAILED: DATABASE_URL not found in environment")
-    print("\nPlease ensure backend/.env file exists with:")
+    print("\nPlease ensure root .env file exists with:")
     print("DATABASE_URL=postgresql://user:password@host:port/database")
     sys.exit(1)
 else:

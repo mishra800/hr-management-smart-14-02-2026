@@ -16,8 +16,8 @@
 git clone <repository-url>
 cd smart-hr-management-system
 
-# Copy production environment template
-cp .env.production .env
+# Copy environment template
+cp .env.example .env
 
 # Edit .env with your production values
 nano .env  # or use your preferred editor

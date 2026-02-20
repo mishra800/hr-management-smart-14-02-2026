@@ -33,6 +33,21 @@ A comprehensive, modern HR management system built with React (Frontend) and Fas
   - Node.js 20+
   - PostgreSQL 14+
 
+## ⚙️ Configuration
+
+The application uses a **single consolidated `.env` file** at the project root for all configuration. This simplifies management and ensures consistency between backend and frontend.
+
+**Key configuration files:**
+- `.env` - Your actual configuration (git-ignored, create from template)
+- `.env.example` - Template for both development and production
+- `verify_env.py` - Script to verify your configuration
+
+See [QUICK_START.md](QUICK_START.md) for setup instructions.
+- OR manually:
+  - Python 3.10+
+  - Node.js 20+
+  - PostgreSQL 14+
+
 ## 🏃 Quick Start
 
 ### Using Docker (Recommended)
@@ -45,8 +60,14 @@ cd smart-hr-management-system
 
 2. **Configure environment**
 ```bash
-cp .env.production .env
+# Copy template to .env
+cp .env.example .env
+
 # Edit .env with your configuration
+# Update DATABASE_URL, SECRET_KEY, and other settings
+
+# Verify configuration (optional)
+python verify_env.py
 ```
 
 3. **Deploy**
@@ -80,8 +101,14 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed manual installation instructions
 
 ## 📚 Documentation
 
+### Essential Guides
+- [Quick Start](QUICK_START.md) - Get started in 5 minutes
+- [URL Configuration](URL_CONFIGURATION_SIMPLE.md) - How to update URLs after deployment
+- [Deployment Checklist](QUICK_DEPLOYMENT_CHECKLIST.md) - Quick deployment reference
+
+### Detailed Documentation
 - [Deployment Guide](DEPLOYMENT.md) - Complete deployment instructions
-- [Production Checklist](PRODUCTION_CHECKLIST.md) - Pre-deployment checklist
+- [Changelog](CHANGELOG.md) - Version history and changes
 - [API Documentation](http://localhost:8000/docs) - Interactive API docs (after deployment)
 
 ## 🏗️ Architecture
@@ -173,7 +200,7 @@ SMTP_PASSWORD=your-app-password
 VITE_API_BASE_URL=http://your-domain.com:8000
 ```
 
-See `.env.production` for complete configuration template.
+See `.env.example` for complete configuration template with development and production guidance.
 
 ## 🧪 Testing
 

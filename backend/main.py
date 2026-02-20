@@ -17,7 +17,7 @@ from app.error_handlers import (
 )
 
 # Import database utilities
-from app.database import test_db_connection, init_db
+from app.database import test_db_connection, init_db, engine
 
 # Configure logging
 logging.basicConfig(
@@ -217,58 +217,8 @@ def read_root():
         "timestamp": datetime.now().isoformat()
     }
 
-# Direct auth endpoints (workaround for router loading issues)
-from fastapi import Form, HTTPException, status as http_status
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import text
-from app.auth_utils import verify_password, create_access_token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
-
-@app.post("/auth/login")
-async def direct_login(username: str = Form(...), password: str = Form(...)):
-    """Direct login endpoint"""
-    try:
-        logger.info(f"Direct login attempt for: {username}")
-        with engine.connect() as conn:
-            query = text("""
-                SELECT id, email, hashed_password, role, is_active, full_name
-                FROM users
-                WHERE email = :email
-            """)
-            result = conn.execute(query, {"email": username})
-            user = result.fetchone()
-            
-            if not user:
-                raise HTTPException(
-                    status_code=http_status.HTTP_401_UNAUTHORIZED,
-                    detail="User not found",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            
-            if not verify_password(password, user[2]):
-                raise HTTPException(
-                    status_code=http_status.HTTP_401_UNAUTHORIZED,
-                    detail="Incorrect password",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            
-            if not user[4]:
-                raise HTTPException(
-                    status_code=http_status.HTTP_401_UNAUTHORIZED,
-                    detail="Account is inactive",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            
-            access_token = create_access_token(
-                data={"sub": user[1]}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-            )
-            
-            logger.info(f"Login successful for: {username}")
-            return {"access_token": access_token, "token_type": "bearer"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Login error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Direct auth endpoints removed - using auth router instead
+# The auth router is now loading successfully, so these direct endpoints are no longer needed
 
 @app.get("/health")
 def health_check():

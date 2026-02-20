@@ -125,6 +125,6 @@ if __name__ == "__main__":
         print(f"\n❌ Error: {e}")
         print("\nMake sure:")
         print("1. Database is running")
-        print("2. Connection details in backend/.env are correct")
+        print("2. Connection details in root .env file are correct")
         print("3. Users table exists in the database")
         sys.exit(1)

@@ -58,7 +58,11 @@ This is the first production-ready release of the Smart HR Management System.
 
 #### Configuration Issues
 - Replaced hardcoded localhost URLs with environment variables
-- Updated production configuration in backend/.env
+- Consolidated all .env files into single root .env file
+- Updated backend to read from root .env file
+- Updated frontend vite.config.js to load from root .env
+- Removed separate backend/.env and frontend/.env files
+- Created comprehensive .env.example template
 - Set DEBUG=False for production
 - Configured CORS for network access
 - Added APP_BASE_URL environment variable support
@@ -69,7 +73,7 @@ This is the first production-ready release of the Smart HR Management System.
 - **deploy.sh** - Linux/Mac automated deployment script
 - **deploy.ps1** - Windows PowerShell deployment script
 - **docker-compose.yml** - Production-ready Docker configuration
-- **.env.production** - Production environment template
+- **.env.example** - Environment configuration template
 - **.gitignore** - Comprehensive gitignore for security
 
 #### Documentation
@@ -131,7 +135,7 @@ This is the first production-ready release of the Smart HR Management System.
 **Quick Deploy:**
 ```bash
 # Configure
-cp .env.production .env
+cp .env.example .env
 
 # Deploy
 ./deploy.sh  # Linux/Mac

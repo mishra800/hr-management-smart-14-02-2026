@@ -2,14 +2,33 @@
 import os
 import logging
 from typing import Generator
+from pathlib import Path
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import NullPool
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from root .env file
+# Try multiple paths to find .env file (prioritize root .env)
+env_paths = [
+    Path.cwd() / '.env',  # workspace_root/.env (PRIORITY)
+    Path(__file__).parent.parent.parent / '.env',  # root/.env (from backend/app/)
+    Path(__file__).parent.parent / '.env',  # backend/.env (fallback)
+    Path.cwd() / 'backend' / '.env',  # workspace_root/backend/.env (fallback)
+]
+
+env_loaded = False
+for env_path in env_paths:
+    if env_path.exists():
+        load_dotenv(env_path)
+        env_loaded = True
+        logger.info(f"✓ Loaded environment variables from: {env_path}")
+        break
+
+if not env_loaded:
+    load_dotenv()  # Try default behavior
+    logger.warning("⚠ Using default .env loading behavior")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
