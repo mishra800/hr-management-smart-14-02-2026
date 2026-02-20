@@ -353,6 +353,88 @@ class MeetingBooking(Base):
     organizer = relationship("User")
 
 # ============================================
+# MEETING MODELS (Standalone Meetings)
+# ============================================
+
+class Meeting(Base):
+    __tablename__ = "meetings"
+    __table_args__ = {'extend_existing': True}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    meeting_date = Column(Date, nullable=False)
+    start_time = Column(String, nullable=False)  # Format: "HH:MM"
+    end_time = Column(String, nullable=False)    # Format: "HH:MM"
+    location = Column(String, nullable=True)
+    meeting_link = Column(String, nullable=True)
+    meeting_type = Column(String, default="meeting")
+    agenda = Column(Text, nullable=True)
+    status = Column(String, default="scheduled")  # scheduled, in-progress, completed, cancelled
+    created_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    creator = relationship("User", foreign_keys=[created_by])
+    attendees = relationship("MeetingAttendee", back_populates="meeting", cascade="all, delete-orphan")
+    notes = relationship("MeetingNote", back_populates="meeting", cascade="all, delete-orphan")
+    action_items = relationship("MeetingActionItem", back_populates="meeting", cascade="all, delete-orphan")
+
+class MeetingAttendee(Base):
+    __tablename__ = "meeting_attendees"
+    __table_args__ = {'extend_existing': True}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    meeting_id = Column(Integer, ForeignKey("meetings.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    status = Column(String, default="invited")  # invited, accepted, declined, tentative
+    joined_at = Column(DateTime, nullable=True)
+    left_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    meeting = relationship("Meeting", back_populates="attendees")
+    user = relationship("User")
+
+class MeetingNote(Base):
+    __tablename__ = "meeting_notes"
+    __table_args__ = {'extend_existing': True}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    meeting_id = Column(Integer, ForeignKey("meetings.id"))
+    created_by = Column(Integer, ForeignKey("users.id"))
+    content = Column(Text, nullable=False)
+    note_type = Column(String, default="general")  # general, action-item, decision, follow-up
+    is_private = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    meeting = relationship("Meeting", back_populates="notes")
+    creator = relationship("User")
+
+class MeetingActionItem(Base):
+    __tablename__ = "meeting_action_items"
+    __table_args__ = {'extend_existing': True}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    meeting_id = Column(Integer, ForeignKey("meetings.id"))
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    assigned_to = Column(Integer, ForeignKey("users.id"))
+    created_by = Column(Integer, ForeignKey("users.id"))
+    status = Column(String, default="pending")  # pending, in-progress, completed, cancelled
+    priority = Column(String, default="medium")  # low, medium, high, urgent
+    due_date = Column(Date, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    meeting = relationship("Meeting", back_populates="action_items")
+    assignee = relationship("User", foreign_keys=[assigned_to])
+    creator = relationship("User", foreign_keys=[created_by])
+
+# ============================================
 # DOCUMENT MODELS
 # ============================================
 

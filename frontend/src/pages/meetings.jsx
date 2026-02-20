@@ -139,15 +139,32 @@ export default function Meetings() {
 
   const handleCreateMeeting = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!newMeeting.title || !newMeeting.meeting_date) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+    
     try {
-      await api.post('/meetings/', newMeeting);
+      // Ensure attendee_ids is an array of integers
+      const meetingData = {
+        ...newMeeting,
+        attendee_ids: newMeeting.attendee_ids || []
+      };
+      
+      console.log('Creating meeting with data:', meetingData);
+      
+      await api.post('/meetings/', meetingData);
       showToast('Meeting created successfully', 'success');
       setShowCreateModal(false);
       resetNewMeeting();
       fetchMeetings();
     } catch (error) {
       console.error('Error creating meeting:', error);
-      showToast('Failed to create meeting', 'error');
+      console.error('Error response:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || 'Failed to create meeting';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -267,7 +284,17 @@ export default function Meetings() {
   };
 
   const renderAnalytics = () => {
-    if (!analytics) return null;
+    if (!analytics) {
+      return (
+        <div className="text-center py-12 text-gray-500">
+          <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <p className="text-lg font-medium">No analytics data available</p>
+          <p className="text-sm">Create some meetings to see analytics</p>
+        </div>
+      );
+    }
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -495,7 +522,7 @@ export default function Meetings() {
           </div>
         )}
 
-        {meetings.length === 0 && view !== 'analytics' && (
+        {meetings.length === 0 && view !== 'analytics' && !loading && (
           <div className="text-center py-12 text-gray-500">
             <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -568,6 +595,7 @@ export default function Meetings() {
                   <input
                     type="date"
                     required
+                    min={new Date().toISOString().split('T')[0]}
                     value={newMeeting.meeting_date}
                     onChange={(e) => setNewMeeting({...newMeeting, meeting_date: e.target.value})}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -663,287 +691,6 @@ export default function Meetings() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Meeting Details Modal */}
-      {showDetailsModal && selectedMeeting && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">{selectedMeeting.title}</h2>
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-700">Date:</span>
-                  <p>{formatMeetingDate(selectedMeeting.meeting_date)}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Time:</span>
-                  <p>{selectedMeeting.start_time} - {selectedMeeting.end_time}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Location:</span>
-                  <p>{selectedMeeting.location || 'Online'}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Type:</span>
-                  <p>{meetingTypes.find(t => t.value === selectedMeeting.meeting_type)?.label}</p>
-                </div>
-              </div>
-
-              {selectedMeeting.description && (
-                <div>
-                  <span className="font-medium text-gray-700">Description:</span>
-                  <p className="mt-1">{selectedMeeting.description}</p>
-                </div>
-              )}
-
-              {selectedMeeting.agenda && (
-                <div>
-                  <span className="font-medium text-gray-700">Agenda:</span>
-                  <div className="mt-1 whitespace-pre-wrap">{selectedMeeting.agenda}</div>
-                </div>
-              )}
-
-              <div>
-                <span className="font-medium text-gray-700">Attendees:</span>
-                <div className="mt-2 space-y-2">
-                  {selectedMeeting.attendees?.map((attendee) => (
-                    <div key={attendee.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <span>{attendee.user?.email || `User ${attendee.user_id}`}</span>
-                      <span className={`px-2 py-1 text-xs rounded ${getStatusColor(attendee.status)}`}>
-                        {attendee.status}
-                      </span>
-                    </div>
-                  )) || <p className="text-gray-500">No attendees added</p>}
-                </div>
-              </div>
-
-              {selectedMeeting.meeting_link && (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleJoinMeeting(selectedMeeting)}
-                    className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-                  >
-                    Join Meeting
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Create Meeting Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Schedule New Meeting</h2>
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  resetNewMeeting();
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {conflicts.length > 0 && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-medium text-yellow-800 mb-2">⚠️ Schedule Conflicts Detected</h4>
-                <div className="space-y-1">
-                  {conflicts.map((conflict, index) => (
-                    <p key={index} className="text-sm text-yellow-700">
-                      {conflict.title} ({conflict.start_time} - {conflict.end_time})
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleCreateMeeting} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meeting Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newMeeting.title}
-                    onChange={(e) => setNewMeeting({...newMeeting, title: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter meeting title"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meeting Type
-                  </label>
-                  <select
-                    value={newMeeting.meeting_type}
-                    onChange={(e) => setNewMeeting({...newMeeting, meeting_type: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {meetingTypes.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.icon} {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={newMeeting.meeting_date}
-                    onChange={(e) => setNewMeeting({...newMeeting, meeting_date: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Time *
-                  </label>
-                  <input
-                    type="time"
-                    required
-                    value={newMeeting.start_time}
-                    onChange={(e) => setNewMeeting({...newMeeting, start_time: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    End Time *
-                  </label>
-                  <input
-                    type="time"
-                    required
-                    value={newMeeting.end_time}
-                    onChange={(e) => setNewMeeting({...newMeeting, end_time: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={newMeeting.location}
-                    onChange={(e) => setNewMeeting({...newMeeting, location: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Conference Room A or Online"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meeting Link
-                  </label>
-                  <input
-                    type="url"
-                    value={newMeeting.meeting_link}
-                    onChange={(e) => setNewMeeting({...newMeeting, meeting_link: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="https://zoom.us/j/..."
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={newMeeting.description}
-                    onChange={(e) => setNewMeeting({...newMeeting, description: e.target.value})}
-                    rows={3}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Brief description of the meeting"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Agenda
-                  </label>
-                  <textarea
-                    value={newMeeting.agenda}
-                    onChange={(e) => setNewMeeting({...newMeeting, agenda: e.target.value})}
-                    rows={4}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Meeting agenda items..."
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Attendees
-                  </label>
-                  <select
-                    multiple
-                    value={newMeeting.attendee_ids}
-                    onChange={(e) => {
-                      const values = Array.from(e.target.selectedOptions, option => parseInt(option.value));
-                      setNewMeeting({...newMeeting, attendee_ids: values});
-                    }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
-                  >
-                    {users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.email} ({user.role})
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple attendees</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-                  disabled={conflicts.length > 0}
-                >
-                  {conflicts.length > 0 ? 'Resolve Conflicts First' : 'Schedule Meeting'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    resetNewMeeting();
-                  }}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                 >
                   Cancel
