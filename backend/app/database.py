@@ -9,6 +9,10 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import NullPool
 from dotenv import load_dotenv
 
+# Configure logging FIRST
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Load environment variables from root .env file
 # Try multiple paths to find .env file (prioritize root .env)
 env_paths = [
@@ -29,10 +33,6 @@ for env_path in env_paths:
 if not env_loaded:
     load_dotenv()  # Try default behavior
     logger.warning("⚠ Using default .env loading behavior")
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Get database URL from environment (REQUIRED - no default with credentials)
 DATABASE_URL = os.getenv("DATABASE_URL")

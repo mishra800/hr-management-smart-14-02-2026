@@ -50,9 +50,12 @@ def get_announcements_with_status(current_user: models.User = Depends(get_curren
         if ann.get("is_active", True)
     ]
     
+    # Handle both dict and User object for current_user
+    user_id = current_user.get("id") if isinstance(current_user, dict) else current_user.id
+    
     # Add acknowledgment status for each announcement
     for ann in active_announcements:
-        ack_key = f"{current_user.id}_{ann['id']}"
+        ack_key = f"{user_id}_{ann['id']}"
         acknowledgment = MOCK_ACKNOWLEDGMENTS.get(ack_key)
         ann["acknowledged"] = acknowledgment is not None
         ann["acknowledged_at"] = acknowledgment.get("acknowledged_at") if acknowledgment else None
@@ -68,7 +71,10 @@ def get_announcements_with_status(current_user: models.User = Depends(get_curren
 @router.get("/stats")
 def get_announcement_stats(current_user: models.User = Depends(get_current_user)):
     """Get announcement statistics - Admin/HR only"""
-    if current_user.role not in ["admin", "hr"]:
+    # Handle both dict and User object for current_user
+    user_role = current_user.get("role") if isinstance(current_user, dict) else current_user.role
+    
+    if user_role not in ["admin", "hr"]:
         raise HTTPException(status_code=403, detail="Only admin or HR can view stats")
     
     total_announcements = len(MOCK_ANNOUNCEMENTS)

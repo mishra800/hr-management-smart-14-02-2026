@@ -102,7 +102,10 @@ def get_my_documents(
     current_user: models.User = Depends(get_current_user)
 ):
     """Get current user's documents with optional filters"""
-    employee = db.query(models.Employee).filter(models.Employee.user_id == current_user.id).first()
+    # Handle both dict and User object for current_user
+    user_id = current_user.get("id") if isinstance(current_user, dict) else current_user.id
+    
+    employee = db.query(models.Employee).filter(models.Employee.user_id == user_id).first()
     if not employee:
         return []
     
