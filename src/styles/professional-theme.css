@@ -1,0 +1,316 @@
+/* Professional Universal Theme System */
+
+/* ============================================
+   PROFESSIONAL COLOR SYSTEM
+   Works across all themes (light/dark)
+   ============================================ */
+
+/* Text Hierarchy - Always Readable */
+.text-heading {
+  @apply text-gray-900 dark:text-gray-50 font-semibold;
+}
+
+.text-body {
+  @apply text-gray-800 dark:text-gray-200;
+}
+
+.text-caption {
+  @apply text-gray-600 dark:text-gray-400 text-sm;
+}
+
+.text-disabled {
+  @apply text-gray-400 dark:text-gray-600;
+}
+
+/* Background Layers */
+.bg-layer-1 {
+  @apply bg-white dark:bg-gray-900;
+}
+
+.bg-layer-2 {
+  @apply bg-gray-50 dark:bg-gray-800;
+}
+
+.bg-layer-3 {
+  @apply bg-gray-100 dark:bg-gray-700;
+}
+
+/* Professional Borders */
+.border-subtle {
+  @apply border-gray-200 dark:border-gray-700;
+}
+
+.border-medium {
+  @apply border-gray-300 dark:border-gray-600;
+}
+
+.border-strong {
+  @apply border-gray-400 dark:border-gray-500;
+}
+
+/* Interactive Elements */
+.interactive-base {
+  @apply text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200;
+}
+
+.interactive-bg {
+  @apply hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700;
+}
+
+/* Professional Buttons */
+.btn-professional {
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-professional-primary {
+  @apply btn-professional bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-sm hover:shadow-md;
+}
+
+.btn-professional-secondary {
+  @apply btn-professional bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100;
+}
+
+.btn-professional-outline {
+  @apply btn-professional border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100;
+}
+
+.btn-professional-ghost {
+  @apply btn-professional bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300;
+}
+
+/* Professional Cards */
+.card-professional {
+  @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
+}
+
+.card-professional-header {
+  @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800;
+}
+
+.card-professional-body {
+  @apply p-6;
+}
+
+.card-professional-footer {
+  @apply px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800;
+}
+
+/* Professional Forms */
+.input-professional {
+  @apply w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+}
+
+.label-professional {
+  @apply block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2;
+}
+
+.select-professional {
+  @apply input-professional appearance-none cursor-pointer;
+}
+
+.textarea-professional {
+  @apply input-professional min-h-[100px];
+  resize: vertical;
+}
+
+/* Professional Tables */
+.table-professional {
+  @apply w-full border-collapse;
+}
+
+.table-professional thead {
+  @apply bg-gray-50 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700;
+}
+
+.table-professional th {
+  @apply px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider;
+}
+
+.table-professional tbody {
+  @apply bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700;
+}
+
+.table-professional td {
+  @apply px-6 py-4 text-sm text-gray-900 dark:text-gray-100;
+}
+
+.table-professional tbody tr {
+  @apply hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150;
+}
+
+/* Professional Status Badges */
+.badge-professional {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border;
+}
+
+.badge-professional-success {
+  @apply badge-professional bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800;
+}
+
+.badge-professional-warning {
+  @apply badge-professional bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800;
+}
+
+.badge-professional-error {
+  @apply badge-professional bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800;
+}
+
+.badge-professional-info {
+  @apply badge-professional bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800;
+}
+
+.badge-professional-neutral {
+  @apply badge-professional bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700;
+}
+
+/* Professional Alerts */
+.alert-professional {
+  @apply p-4 rounded-lg border-l-4 flex items-start space-x-3;
+}
+
+.alert-professional-success {
+  @apply alert-professional bg-green-50 dark:bg-green-900/10 border-green-500 dark:border-green-600 text-green-800 dark:text-green-300;
+}
+
+.alert-professional-warning {
+  @apply alert-professional bg-yellow-50 dark:bg-yellow-900/10 border-yellow-500 dark:border-yellow-600 text-yellow-800 dark:text-yellow-300;
+}
+
+.alert-professional-error {
+  @apply alert-professional bg-red-50 dark:bg-red-900/10 border-red-500 dark:border-red-600 text-red-800 dark:text-red-300;
+}
+
+.alert-professional-info {
+  @apply alert-professional bg-blue-50 dark:bg-blue-900/10 border-blue-500 dark:border-blue-600 text-blue-800 dark:text-blue-300;
+}
+
+/* Professional Navigation */
+.nav-professional-item {
+  @apply flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200;
+}
+
+.nav-professional-item-active {
+  @apply nav-professional-item bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-r-4 border-blue-600 dark:border-blue-500 shadow-sm;
+}
+
+.nav-professional-item-inactive {
+  @apply nav-professional-item text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100;
+}
+
+/* Professional Modals */
+.modal-professional-overlay {
+  @apply fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+}
+
+.modal-professional-content {
+  @apply bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700;
+}
+
+.modal-professional-header {
+  @apply flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800;
+}
+
+.modal-professional-title {
+  @apply text-lg font-semibold text-gray-900 dark:text-gray-100;
+}
+
+.modal-professional-body {
+  @apply p-6 overflow-y-auto;
+}
+
+.modal-professional-footer {
+  @apply flex items-center justify-end space-x-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800;
+}
+
+/* Professional Tooltips */
+.tooltip-professional {
+  @apply absolute z-50 px-3 py-2 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg;
+}
+
+/* Professional Dividers */
+.divider-professional {
+  @apply border-t border-gray-200 dark:border-gray-700 my-4;
+}
+
+.divider-professional-vertical {
+  @apply border-l border-gray-200 dark:border-gray-700 mx-4 h-full;
+}
+
+/* Professional Shadows */
+.shadow-professional-sm {
+  @apply shadow-sm dark:shadow-gray-900/50;
+}
+
+.shadow-professional-md {
+  @apply shadow-md dark:shadow-gray-900/50;
+}
+
+.shadow-professional-lg {
+  @apply shadow-lg dark:shadow-gray-900/50;
+}
+
+.shadow-professional-xl {
+  @apply shadow-xl dark:shadow-gray-900/50;
+}
+
+/* Professional Focus States */
+.focus-professional {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900;
+}
+
+/* Professional Hover Effects */
+.hover-lift {
+  @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg;
+}
+
+.hover-scale {
+  @apply transition-transform duration-200 hover:scale-105;
+}
+
+/* Professional Loading States */
+.skeleton-professional {
+  @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
+}
+
+/* Professional Empty States */
+.empty-state-professional {
+  @apply flex flex-col items-center justify-center py-12 text-center;
+}
+
+.empty-state-professional-icon {
+  @apply w-16 h-16 text-gray-400 dark:text-gray-600 mb-4;
+}
+
+.empty-state-professional-title {
+  @apply text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2;
+}
+
+.empty-state-professional-description {
+  @apply text-sm text-gray-600 dark:text-gray-400 max-w-sm;
+}
+
+/* Professional Scrollbars */
+.scrollbar-professional::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+.scrollbar-professional::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800 rounded;
+}
+
+.scrollbar-professional::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 dark:hover:bg-gray-500;
+}
+
+/* Professional Transitions */
+.transition-professional {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.transition-professional-slow {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.transition-professional-fast {
+  @apply transition-all duration-150 ease-in-out;
+}
