@@ -160,9 +160,11 @@ def setup_cors():
         "http://localhost:5173",
         "http://localhost:5174", 
         "http://localhost:5175",
+        "http://192.168.20.122:3000",
         "http://192.168.20.122:5173",
         "http://192.168.20.122:5174",
         "http://192.168.20.122:5175",
+        "http://192.168.20.122:8000",
         "https://dhanush-hr.netlify.app",
     ]
     
