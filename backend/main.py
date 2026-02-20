@@ -157,18 +157,15 @@ def setup_cors():
     # Base origins that work in all environments
     origins = [
         # Local development (localhost)
+        "http://localhost:3000",        # Production build locally
         "http://localhost:5173",        # Vite dev server (primary)
         "http://localhost:5174",        # Vite alternate port
-        "http://localhost:3000",        # Production build locally
         
         # Network access (for testing from other devices on LAN)
+        "http://192.168.20.122:3000",   # Your IP - production port
         "http://192.168.20.122:5173",   # Your IP - Vite dev server
         "http://192.168.20.122:5174",   # Your IP - Vite alternate
-        "http://192.168.20.122:3000",   # Your IP - production port
         "http://192.168.20.122:8000",   # Your IP - backend API
-        
-        # Production deployment
-        "https://dhanush-hr.netlify.app",
     ]
     
     # Add environment-specific origins from .env
