@@ -510,20 +510,78 @@ class MeetingRoomOut(MeetingRoomBase):
         from_attributes = True
 
 class MeetingBase(BaseModel):
-    room_id: int
     title: str
     description: Optional[str] = None
-    start_time: datetime
-    end_time: datetime
-    attendees: Optional[List[int]] = []
+    meeting_date: date
+    start_time: str  # Format: "HH:MM"
+    end_time: str    # Format: "HH:MM"
+    location: Optional[str] = None
+    meeting_link: Optional[str] = None
+    meeting_type: Optional[str] = "meeting"
+    agenda: Optional[str] = None
+    attendee_ids: Optional[List[int]] = []
 
 class MeetingCreate(MeetingBase):
     pass
 
+class MeetingAttendeeOut(BaseModel):
+    id: int
+    user_id: int
+    status: str
+    
+    class Config:
+        from_attributes = True
+
 class MeetingOut(MeetingBase):
     id: int
-    booked_by: int
+    created_by: int
     status: str
+    created_at: datetime
+    attendees: Optional[List[MeetingAttendeeOut]] = []
+    
+    class Config:
+        from_attributes = True
+
+class MeetingAttendeeCreate(BaseModel):
+    user_ids: List[int]
+
+class AttendeeStatusUpdate(BaseModel):
+    status: str
+
+class MeetingNoteCreate(BaseModel):
+    content: str
+    note_type: Optional[str] = "general"
+    is_private: Optional[bool] = False
+
+class MeetingNoteOut(BaseModel):
+    id: int
+    meeting_id: int
+    created_by: int
+    content: str
+    note_type: str
+    is_private: bool
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class MeetingActionItemCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    assigned_to: int
+    due_date: Optional[date] = None
+    priority: Optional[str] = "medium"
+
+class MeetingActionItemOut(BaseModel):
+    id: int
+    meeting_id: int
+    title: str
+    description: Optional[str] = None
+    assigned_to: int
+    created_by: int
+    status: str
+    priority: str
+    due_date: Optional[date] = None
     created_at: datetime
     
     class Config:
@@ -657,8 +715,13 @@ class AttritionPredictionOut(BaseModel):
 class MeetingUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    meeting_date: Optional[date] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    location: Optional[str] = None
+    meeting_link: Optional[str] = None
+    meeting_type: Optional[str] = None
+    agenda: Optional[str] = None
     status: Optional[str] = None
 
 class EnrollmentOut(BaseModel):
