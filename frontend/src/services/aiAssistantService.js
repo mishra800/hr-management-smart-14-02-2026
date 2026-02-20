@@ -1,4 +1,28 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.20.122:8000';
+// Auto-detect API URL based on environment
+function getApiBaseUrl() {
+  // 1. Use environment variable if set
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // 2. Auto-detect based on hostname
+  const hostname = window.location.hostname;
+  
+  // If accessing via IP address, use that IP
+  if (hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
+    return `http://${hostname}:8000`;
+  }
+  
+  // If on localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  
+  // Production fallback
+  return 'http://192.168.20.122:8000';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 class AIAssistantService {
   constructor() {

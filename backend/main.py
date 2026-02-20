@@ -153,32 +153,37 @@ app.add_exception_handler(Exception, general_exception_handler)
 
 # Secure CORS configuration
 def setup_cors():
-    """Setup CORS with security considerations"""
-    # Default secure origins
+    """Setup CORS with security considerations - supports both local and deployment"""
+    # Base origins that work in all environments
     origins = [
-        # Local development
+        # Local development (localhost)
         "http://localhost:5173",        # Vite dev server (primary)
         "http://localhost:5174",        # Vite alternate port
+        "http://localhost:3000",        # Production build locally
         
-        # Network access (for testing from other devices)
+        # Network access (for testing from other devices on LAN)
         "http://192.168.20.122:5173",   # Your IP - Vite dev server
         "http://192.168.20.122:5174",   # Your IP - Vite alternate
         "http://192.168.20.122:3000",   # Your IP - production port
+        "http://192.168.20.122:8000",   # Your IP - backend API
         
         # Production deployment
         "https://dhanush-hr.netlify.app",
     ]
     
-    # Add environment-specific origins
+    # Add environment-specific origins from .env
     frontend_url = os.getenv("FRONTEND_URL")
-    if frontend_url:
+    if frontend_url and frontend_url not in origins:
         origins.append(frontend_url)
+        logger.info(f"Added FRONTEND_URL from environment: {frontend_url}")
     
-    # Additional allowed origins from environment
+    # Additional allowed origins from environment (comma-separated)
     additional_origins = os.getenv("ADDITIONAL_CORS_ORIGINS", "").split(",")
     for origin in additional_origins:
-        if origin.strip():
-            origins.append(origin.strip())
+        origin = origin.strip()
+        if origin and origin not in origins:
+            origins.append(origin)
+            logger.info(f"Added additional CORS origin: {origin}")
     
     # Security check for wildcard CORS
     environment = os.getenv("ENVIRONMENT", "development").lower()
@@ -194,7 +199,8 @@ def setup_cors():
             logger.warning("⚠️ CORS_ALLOW_ALL=true - only use in development!")
             origins = ["*"]
     
-    logger.info(f"CORS Configuration: Environment={environment}, Origins={origins}")
+    logger.info(f"CORS Configuration: Environment={environment}, Origins={len(origins)} configured")
+    logger.info(f"CORS Origins: {origins}")
     
     return origins
 
