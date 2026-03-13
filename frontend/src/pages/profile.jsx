@@ -43,14 +43,14 @@ export default function Profile() {
 
   const loadProfile = async () => {
     try {
-      console.log('Loading profile...');
-      const response = await api.get('/users/me/profile');
-      console.log('Profile response:', response.data);
+      console.log('📋 Loading profile...');
+      const response = await api.get('/employees/me/profile');
+      console.log('✅ Profile response:', response.data);
       setProfile(response.data);
       
       // Load employee details if available
       if (response.data.employee) {
-        console.log('Employee data found:', response.data.employee);
+        console.log('👤 Employee data found:', response.data.employee);
         setFormData({
           first_name: response.data.employee.first_name || '',
           last_name: response.data.employee.last_name || '',
@@ -62,16 +62,22 @@ export default function Profile() {
           emergency_contact_phone: response.data.employee.emergency_contact_phone || '',
           date_of_birth: response.data.employee.date_of_birth ? response.data.employee.date_of_birth.split('T')[0] : '',
           wedding_anniversary_date: response.data.employee.wedding_anniversary_date ? response.data.employee.wedding_anniversary_date.split('T')[0] : '',
-          gender: response.data.employee.gender || ''  // Add gender field
+          gender: response.data.employee.gender || ''
         });
+        
+        // Load profile image from employee data
+        if (response.data.employee.profile_image_url) {
+          console.log('🖼️ Profile image URL found:', response.data.employee.profile_image_url);
+          setProfileImage(response.data.employee.profile_image_url);
+        }
       } else {
-        console.log('No employee data found in response');
+        console.log('⚠️ No employee data found in response');
       }
 
       // Load profile completion status
       try {
         const statusResponse = await api.get('/employees/me/profile-status');
-        console.log('Profile status response:', statusResponse.data);
+        console.log('📊 Profile status response:', statusResponse.data);
         if (statusResponse.data.data) {
           setProfileCompletion(statusResponse.data.data.profile_completion || 0);
           setMissingFields(statusResponse.data.data.missing_fields || []);
@@ -80,24 +86,13 @@ export default function Profile() {
           setMissingFields(statusResponse.data.missing_fields || []);
         }
       } catch (statusError) {
-        console.log('Error loading profile status:', statusError);
+        console.warn('⚠️ Error loading profile status:', statusError.message);
         // Set default values if status endpoint fails
         setProfileCompletion(0);
         setMissingFields([]);
       }
-
-      // Load profile image
-      try {
-        const imageResponse = await api.get('/attendance/check-profile-image');
-        console.log('Profile image response:', imageResponse.data);
-        if (imageResponse.data.profile_image_url) {
-          setProfileImage(imageResponse.data.profile_image_url);
-        }
-      } catch (imageError) {
-        console.log('No profile image found or error loading image:', imageError);
-      }
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error('❌ Error loading profile:', error);
       console.error('Error details:', error.response?.data);
       alert('Failed to load profile. Please try again or contact support.');
     } finally {

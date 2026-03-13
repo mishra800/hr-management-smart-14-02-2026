@@ -55,7 +55,7 @@ export default function Performance() {
 
   const fetchProfile = async () => {
     try {
-      const res = await api.get('/users/me/profile');
+      const res = await api.get('/employees/me/profile');
       setEmployee(res.data);
     } catch (error) {
       console.error(error);

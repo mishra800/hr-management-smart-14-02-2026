@@ -268,53 +268,6 @@ export default function SuperAdmin() {
     }
   };
 
-  // Unused template initialization functions - kept for reference
-  // const initializeStartupMode = () => {
-  //   // Everyone gets more access in startup mode
-  //   const startupCaps = {};
-  //   ROLES.forEach(role => {
-  //     startupCaps[role.id] = {};
-  //     MODULES.forEach(module => {
-  //       if (role.id === 'super_admin') {
-  //         startupCaps[role.id][module.id] = { enabled: true, permissions: ['read', 'write', 'delete'] };
-  //       } else if (role.id === 'candidate') {
-  //         startupCaps[role.id][module.id] = { enabled: false, permissions: [] };
-  //       } else {
-  //         // Everyone else gets read access to most things
-  //         startupCaps[role.id][module.id] = { enabled: true, permissions: ['read'] };
-  //       }
-  //     });
-  //   });
-  //   return startupCaps;
-  // };
-
-  // const initializeEnterpriseMode = () => {
-  //   // Strict separation in enterprise mode
-  //   return initializeDefaultCapabilities();
-  // };
-
-  // const initializeRemoteMode = () => {
-  //   // Focus on engagement, communication, and self-service
-  //   const remoteCaps = {};
-  //   ROLES.forEach(role => {
-  //     remoteCaps[role.id] = {};
-  //     MODULES.forEach(module => {
-  //       const engagementModules = ['dashboard', 'engagement', 'learning', 'announcements', 'meetings'];
-  //       if (role.id === 'super_admin') {
-  //         remoteCaps[role.id][module.id] = { enabled: true, permissions: ['read', 'write', 'delete'] };
-  //       } else if (role.id === 'employee') {
-  //         remoteCaps[role.id][module.id] = {
-  //           enabled: engagementModules.includes(module.id) || ['attendance', 'leave', 'performance'].includes(module.id),
-  //           permissions: ['read', 'write']
-  //         };
-  //       } else {
-  //         remoteCaps[role.id][module.id] = initializeDefaultCapabilities()[role.id][module.id];
-  //       }
-  //     });
-  //   });
-  //   return remoteCaps;
-  // };
-
   const resetToDefaults = () => {
     if (confirm('Are you sure you want to reset all capabilities to default values? This cannot be undone.')) {
       initializeDefaultCapabilities();

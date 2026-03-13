@@ -34,16 +34,31 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
     try {
       // Get users with interviewer roles
       const usersResponse = await api.get('/users');
-      const interviewerUsers = usersResponse.data.filter(user => 
+      let usersData = usersResponse.data?.data || usersResponse.data;
+      
+      // Ensure usersData is an array
+      if (!Array.isArray(usersData)) {
+        console.warn('Users response is not an array:', usersData);
+        usersData = [];
+      }
+      
+      const interviewerUsers = usersData.filter(user => 
         ['hr', 'manager', 'admin'].includes(user.role)
       );
       
       // Get all employees
       const employeesResponse = await api.get('/employees');
+      let employeesData = employeesResponse.data?.data || employeesResponse.data;
+      
+      // Ensure employeesData is an array
+      if (!Array.isArray(employeesData)) {
+        console.warn('Employees response is not an array:', employeesData);
+        employeesData = [];
+      }
       
       // Match users with their employee profiles
       const matchedInterviewers = interviewerUsers.map(user => {
-        const employee = employeesResponse.data.find(emp => emp.user_id === user.id);
+        const employee = employeesData.find(emp => emp.user_id === user.id);
         if (employee) {
           return {
             ...employee,
@@ -66,6 +81,7 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
     } catch (error) {
       console.error('Error fetching interviewers:', error);
       showToast('Failed to load interviewers', 'error');
+      setInterviewers([]);
     }
   };
 
@@ -83,17 +99,15 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
     setLoading(true);
     try {
       const interviewData = {
-        application_id: application.id,
-        scheduled_date: format(selectedDate, 'yyyy-MM-dd'),
-        scheduled_time: selectedTime,
-        interviewer_ids: selectedInterviewers,
+        scheduled_date: format(selectedDate, 'yyyy-MM-dd') + 'T' + selectedTime + ':00',
+        interviewer_id: selectedInterviewers[0],
         interview_type: interviewType,
-        notes: notes,
-        status: 'scheduled'
+        meeting_link: null,
+        notes: notes || null
       };
 
       console.log('Sending interview data:', interviewData);
-      await api.post('/recruitment/interviews', interviewData);
+      await api.post('/interviews/schedule/' + application.id, interviewData);
       showToast('Interview scheduled successfully', 'success');
       onScheduled();
       onClose();
@@ -101,10 +115,14 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
       console.error('Error scheduling interview:', error);
       if (error.response?.status === 422) {
         showToast('Invalid interview data. Please check all fields.', 'error');
+      } else if (error.response?.status === 403) {
+        showToast('You do not have permission to schedule interviews.', 'error');
       } else if (error.response?.status === 404) {
-        showToast('Interview endpoint not found. Server may need restart.', 'error');
+        showToast(error.response?.data?.detail || 'Interview endpoint not found. Server may need restart.', 'error');
+      } else if (error.response?.status === 400) {
+        showToast(error.response?.data?.detail || 'Failed to schedule interview. Please check the details.', 'error');
       } else {
-        showToast('Failed to schedule interview', 'error');
+        showToast(error.response?.data?.detail || 'Failed to schedule interview', 'error');
       }
     } finally {
       setLoading(false);

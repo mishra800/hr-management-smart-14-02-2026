@@ -46,28 +46,35 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Only check for existing auth on mount, don't make API calls
+    // Validate token on mount
     const token = localStorage.getItem('token');
     if (token) {
-      // Check if token looks valid (basic format check)
       try {
         const tokenParts = token.split('.');
         if (tokenParts.length === 3) {
-          // Token has correct JWT format, but don't validate it here
-          // Let the API calls handle validation naturally
-          console.log('Found existing token, will validate on first API call');
+          // Token has correct JWT format, validate it
+          console.log('✅ Token found and validated');
+          // Optionally fetch user data to verify token is still valid
+          fetchUser().catch(err => {
+            console.warn('⚠️ Token validation failed:', err.message);
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('profile_setup_completed');
+            setUser(null);
+          });
         } else {
-          // Invalid token format, clear it
-          console.log('Invalid token format, clearing');
+          console.warn('⚠️ Invalid token format');
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           localStorage.removeItem('profile_setup_completed');
+          setUser(null);
         }
       } catch (error) {
-        console.log('Error checking token, clearing');
+        console.error('❌ Error validating token:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('profile_setup_completed');
+        setUser(null);
       }
     }
   }, []);

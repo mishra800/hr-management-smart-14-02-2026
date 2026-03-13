@@ -4,6 +4,7 @@ import API_BASE_URL from '../config/api';
 
 export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
@@ -102,8 +103,8 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
       if (response.data.success) {
         alert('Profile image updated successfully!');
         const imageUrl = response.data.data?.profile_image_url || capturedImage;
-        onImageUpdate && onImageUpdate(imageUrl);
         setCapturedImage(null);
+        onImageUpdate && onImageUpdate(imageUrl);
       } else {
         alert('Failed to upload image: ' + (response.data.message || 'Unknown error'));
       }
@@ -151,6 +152,7 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
         if (response.data.success) {
           alert('Profile image updated successfully!');
           const imageUrl = response.data.data?.profile_image_url || e.target.result;
+          setCapturedImage(null);
           onImageUpdate && onImageUpdate(imageUrl);
         } else {
           alert('Failed to upload image: ' + (response.data.message || 'Unknown error'));
@@ -172,6 +174,33 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
     reader.readAsDataURL(file);
   };
 
+  const handleDeleteImage = async () => {
+    if (!window.confirm('Are you sure you want to delete your profile photo? You can upload a new one anytime.')) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      console.log('Deleting profile image...');
+      const response = await api.delete('/attendance/delete-profile-image');
+      
+      console.log('Delete response:', response.data);
+      
+      if (response.data.success) {
+        alert('Profile image deleted successfully!');
+        setCapturedImage(null);
+        onImageUpdate && onImageUpdate(null);
+      } else {
+        alert('Failed to delete image: ' + (response.data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Failed to delete image: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">📸 Profile Photo</h3>
@@ -180,9 +209,14 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
       {currentImage && !capturedImage && (
         <div className="mb-4 text-center">
           <img 
-            src={currentImage.startsWith('data:') || currentImage.startsWith('http') || currentImage.startsWith('/') 
-              ? currentImage 
-              : `${API_BASE_URL}${currentImage}`
+            src={
+              currentImage.startsWith('data:') 
+                ? currentImage 
+                : currentImage.startsWith('http')
+                ? currentImage
+                : currentImage.startsWith('/')
+                ? `${API_BASE_URL}${currentImage}`
+                : `${API_BASE_URL}/${currentImage}`
             } 
             alt="Profile" 
             className="w-32 h-32 rounded-full mx-auto border-4 border-gray-200 object-cover"
@@ -192,6 +226,23 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
             }}
           />
           <p className="text-sm text-gray-600 mt-2">Current profile photo</p>
+          
+          {/* Delete and Update Buttons */}
+          <div className="flex space-x-3 mt-4">
+            <button
+              onClick={handleDeleteImage}
+              disabled={deleting}
+              className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-gray-400 font-semibold transition"
+            >
+              {deleting ? '🗑️ Deleting...' : '🗑️ Delete Photo'}
+            </button>
+            <button
+              onClick={startCamera}
+              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 font-semibold transition"
+            >
+              📷 Update Photo
+            </button>
+          </div>
         </div>
       )}
 
@@ -208,13 +259,13 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
             <button
               onClick={handleUploadCaptured}
               disabled={uploading}
-              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-400 font-semibold transition"
             >
               {uploading ? 'Uploading...' : '✅ Save Photo'}
             </button>
             <button
               onClick={handleRetakePhoto}
-              className="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700"
+              className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 font-semibold transition"
             >
               🔄 Retake
             </button>
@@ -249,13 +300,13 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
             <button
               onClick={handleCapture}
               disabled={!cameraReady}
-              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-400 font-semibold transition"
             >
               📸 Capture Photo
             </button>
             <button
               onClick={stopCamera}
-              className="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700"
+              className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 font-semibold transition"
             >
               Cancel
             </button>
@@ -265,7 +316,7 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
         <div className="space-y-3">
           <button
             onClick={startCamera}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold transition"
           >
             📷 Take Photo with Camera
           </button>
@@ -274,7 +325,7 @@ export default function ProfileImageUpload({ currentImage, onImageUpdate }) {
           
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-semibold"
+            className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-semibold transition"
           >
             📁 Upload from Files
           </button>

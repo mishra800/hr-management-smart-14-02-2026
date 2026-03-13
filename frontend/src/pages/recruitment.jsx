@@ -44,6 +44,8 @@ export default function Recruitment() {
   // Screening State
   const [viewingJobId, setViewingJobId] = useState(null);
   const [applications, setApplications] = useState([]);
+  const [allApplications, setAllApplications] = useState([]);
+  const [loadingAllApplications, setLoadingAllApplications] = useState(false);
 
   // Assessment State
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
@@ -118,9 +120,20 @@ export default function Recruitment() {
     setSelectedApplications([]); // Clear selections when switching jobs
     try {
       const response = await api.get(`/recruitment/jobs/${jobId}/applications`);
-      setApplications(response.data);
+      console.log('Applications response:', response);
+      console.log('Applications data:', response.data);
+      
+      // Ensure we have an array
+      let applicationsData = response.data;
+      if (!Array.isArray(applicationsData)) {
+        console.warn('Response is not an array, converting:', applicationsData);
+        applicationsData = [];
+      }
+      
+      setApplications(applicationsData);
     } catch (error) {
       console.error('Error fetching applications:', error);
+      console.error('Error response:', error.response);
       setApplications([]);
     }
   };
@@ -166,6 +179,23 @@ export default function Recruitment() {
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchAllApplications = async () => {
+    setLoadingAllApplications(true);
+    try {
+      const response = await api.get('/recruitment/all-applications');
+      let applicationsData = response.data;
+      if (!Array.isArray(applicationsData)) {
+        applicationsData = [];
+      }
+      setAllApplications(applicationsData);
+    } catch (error) {
+      console.error('Error fetching all applications:', error);
+      setAllApplications([]);
+    } finally {
+      setLoadingAllApplications(false);
     }
   };
 
@@ -445,7 +475,11 @@ export default function Recruitment() {
 
       // Get shortlisted candidates for this job
       const applicationsResponse = await api.get(`/recruitment/jobs/${jobId}/applications`);
-      const shortlistedCandidates = applicationsResponse.data.filter(app => app.status === 'shortlisted');
+      let applicationsData = applicationsResponse.data;
+      if (!Array.isArray(applicationsData)) {
+        applicationsData = [];
+      }
+      const shortlistedCandidates = applicationsData.filter(app => app.status === 'shortlisted');
 
       if (shortlistedCandidates.length === 0) {
         alert('No shortlisted candidates found for this job.');
@@ -467,7 +501,11 @@ export default function Recruitment() {
       // Refresh applications to show updated status
       if (viewingJobId === jobId) {
         const updatedApps = await api.get(`/recruitment/jobs/${jobId}/applications`);
-        setApplications(updatedApps.data);
+        let updatedAppsData = updatedApps.data;
+        if (!Array.isArray(updatedAppsData)) {
+          updatedAppsData = [];
+        }
+        setApplications(updatedAppsData);
       }
     } catch (error) {
       console.error('Error sending assessment:', error);
@@ -521,7 +559,7 @@ export default function Recruitment() {
     if (!app) return alert("No candidates to interview yet");
 
     try {
-      const response = await api.post(`/ai-interview/generate-questions/${app.id}`);
+      const response = await api.post(`/recruitment/ai-interview/generate-questions/${app.id}`);
       setInterviewQuestions(response.data);
       setShowInterviewModal(true);
       setCurrentQuestionIndex(0);
@@ -768,6 +806,7 @@ export default function Recruitment() {
             { id: 'dashboard', label: 'Dashboard' },
             { id: 'create', label: 'Create Requisition' },
             { id: 'jobs', label: 'Active Pipelines' },
+            { id: 'all-applications', label: 'All Applications' },
             { id: 'kanban', label: 'Kanban Board' },
             { id: 'board', label: 'Job Board (Public)' }
           ].map((tab) => (
@@ -1281,6 +1320,111 @@ export default function Recruitment() {
                 </svg>
                 <h3 className="mt-2 text-sm font-medium text-gray-900">No Job Selected</h3>
                 <p className="mt-1 text-sm text-gray-500">Select a job from the dropdown above to view candidates in Kanban view</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ALL APPLICATIONS */}
+        {activeTab === 'all-applications' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">All Applications</h3>
+              <button
+                onClick={fetchAllApplications}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                🔄 Refresh
+              </button>
+            </div>
+
+            {loadingAllApplications ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading applications...</p>
+              </div>
+            ) : allApplications.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50 rounded-lg">
+                <p className="text-gray-600">No applications found</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {allApplications.map(app => (
+                  <div key={app.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">{app.candidate_name}</h4>
+                        <p className="text-sm text-gray-600">{app.candidate_email}</p>
+                        {app.phone && <p className="text-sm text-gray-600">📞 {app.phone}</p>}
+                        <p className="text-sm text-gray-500 mt-1">Position: <span className="font-medium">{app.job_title || 'N/A'}</span></p>
+                      </div>
+                      <div className="text-right">
+                        <div className={`inline-flex items-center px-3 py-2 rounded-lg border mb-3 ${
+                          app.status === 'shortlisted' ? 'bg-green-50 border-green-200' :
+                          app.status === 'rejected' ? 'bg-red-50 border-red-200' :
+                          app.status === 'under_review' ? 'bg-yellow-50 border-yellow-200' :
+                          'bg-gray-50 border-gray-200'
+                        }`}>
+                          <span className={`text-sm font-medium ${
+                            app.status === 'shortlisted' ? 'text-green-700' :
+                            app.status === 'rejected' ? 'text-red-700' :
+                            app.status === 'under_review' ? 'text-yellow-700' :
+                            'text-gray-700'
+                          }`}>
+                            {app.status === 'shortlisted' ? '✅ Shortlisted' :
+                             app.status === 'rejected' ? '❌ Rejected' :
+                             app.status === 'under_review' ? '⏸️ Under Review' :
+                             '📥 Received'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Applied: {new Date(app.applied_date).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-green-600 font-semibold mt-1">
+                          AI Score: {app.ai_fit_score}%
+                        </p>
+                        <div className="flex gap-2 mt-3 justify-end">
+                          <button
+                            onClick={() => handleShortlist(app.id)}
+                            disabled={app.status === 'shortlisted'}
+                            className={`px-2 py-1 text-xs rounded transition-colors ${
+                              app.status === 'shortlisted' 
+                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                                : 'bg-green-600 hover:bg-green-700 text-white'
+                            }`}
+                            title="Shortlist candidate"
+                          >
+                            ✅
+                          </button>
+                          <button
+                            onClick={() => handleHold(app.id)}
+                            disabled={app.status === 'under_review'}
+                            className={`px-2 py-1 text-xs rounded transition-colors ${
+                              app.status === 'under_review' 
+                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                                : 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                            }`}
+                            title="Put on hold"
+                          >
+                            ⏸️
+                          </button>
+                          <button
+                            onClick={() => handleReject(app.id)}
+                            disabled={app.status === 'rejected'}
+                            className={`px-2 py-1 text-xs rounded transition-colors ${
+                              app.status === 'rejected' 
+                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                                : 'bg-red-600 hover:bg-red-700 text-white'
+                            }`}
+                            title="Reject candidate"
+                          >
+                            ❌
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

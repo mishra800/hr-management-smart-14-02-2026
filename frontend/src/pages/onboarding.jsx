@@ -89,7 +89,7 @@ export default function Onboarding() {
       
       // Then try to get full profile
       try {
-        const profileRes = await api.get('/users/me/profile');
+        const profileRes = await api.get('/employees/me/profile');
         setEmployee({
           ...profileRes.data,
           id: employeeData.employee_id,

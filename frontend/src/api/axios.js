@@ -18,6 +18,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('❌ [API] Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -28,9 +29,11 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    console.error(`❌ [API] Error ${error.response?.status} from ${error.config?.url}:`, error.message);
+    
     // If we get a 401 error, the token is likely expired
     if (error.response?.status === 401 && !isRedirecting) {
-      console.log('Received 401 error, clearing auth state');
+      console.log('🔐 Received 401 error, clearing auth state');
       
       // Set flag to prevent multiple simultaneous redirects
       isRedirecting = true;

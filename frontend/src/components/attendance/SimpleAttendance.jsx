@@ -22,8 +22,9 @@ export default function SimpleAttendance() {
     try {
       // Check if already marked today
       const attendanceRes = await api.get('/attendance/my-attendance');
+      const attendanceData = attendanceRes.data.data || attendanceRes.data;
       const today = new Date().toDateString();
-      const todayRecord = attendanceRes.data.find(a => 
+      const todayRecord = attendanceData.find(a => 
         new Date(a.date).toDateString() === today
       );
       
@@ -35,7 +36,8 @@ export default function SimpleAttendance() {
 
       // Check if has profile image
       const profileRes = await api.get('/attendance/check-profile-image');
-      setHasProfileImage(profileRes.data.has_profile_image);
+      const profileData = profileRes.data.data || profileRes.data;
+      setHasProfileImage(profileData.has_image || profileData.has_profile_image);
       
     } catch (err) {
       setError('Failed to check status: ' + (err.response?.data?.detail || err.message));

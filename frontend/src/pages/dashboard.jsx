@@ -116,9 +116,12 @@ export default function Dashboard() {
     setLoadingLeaves(true);
     try {
       const response = await api.get('/leave/pending');
-      setPendingLeaves(response.data);
+      // Extract data from APIResponse structure
+      const leavesData = response.data?.data || response.data || [];
+      setPendingLeaves(Array.isArray(leavesData) ? leavesData : []);
     } catch (error) {
       console.error('Error fetching pending leaves:', error);
+      setPendingLeaves([]);
     } finally {
       setLoadingLeaves(false);
     }

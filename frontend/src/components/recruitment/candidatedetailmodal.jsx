@@ -9,7 +9,6 @@ export default function CandidateDetailModal({ application, onClose, onRefresh }
   const [newComment, setNewComment] = useState('');
   const [stageHistory, setStageHistory] = useState([]);
   const [scoreBreakdown, setScoreBreakdown] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState('');
   
@@ -21,8 +20,6 @@ export default function CandidateDetailModal({ application, onClose, onRefresh }
 
   const fetchDetails = async () => {
     try {
-      setLoading(true);
-      
       // Fetch comments
       const commentsRes = await api.get(`/recruitment/applications/${application.id}/comments`);
       setComments(commentsRes.data || []);
@@ -43,8 +40,6 @@ export default function CandidateDetailModal({ application, onClose, onRefresh }
       setTags(JSON.parse(application.tags || '[]'));
     } catch (err) {
       console.error('Error fetching details:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -122,16 +117,6 @@ export default function CandidateDetailModal({ application, onClose, onRefresh }
     }
   };
 
-  const handleScheduleInterview = () => {
-    // TODO: Open interview scheduler
-    showError('Interview scheduler coming soon');
-  };
-
-  const handleSendEmail = () => {
-    // TODO: Open email composer
-    showError('Email composer coming soon');
-  };
-
   const getScoreColor = (score) => {
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
@@ -189,18 +174,6 @@ export default function CandidateDetailModal({ application, onClose, onRefresh }
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
             >
               ✗ Reject
-            </button>
-            <button
-              onClick={handleScheduleInterview}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-            >
-              📅 Schedule Interview
-            </button>
-            <button
-              onClick={handleSendEmail}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
-            >
-              ✉️ Send Email
             </button>
             <button
               onClick={handleToggleStar}
@@ -309,7 +282,7 @@ export default function CandidateDetailModal({ application, onClose, onRefresh }
                     type="text"
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
                     placeholder="Add tag..."
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />

@@ -9,6 +9,7 @@ import Login from './pages/login';
 import Signup from './pages/signup';
 import Recruitment from './pages/recruitment';
 import AIInterview from './pages/aiinterview';
+import InterviewPortal from './pages/interview';
 import Employees from './pages/employees';
 
 import Attendance from './pages/Attendance';
@@ -52,6 +53,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/ai-interview/:applicationId" element={<AIInterview />} />
+            <Route path="/interview/:sessionToken" element={<InterviewPortal />} />
 
             {/* Protected Routes */}
             <Route path="/dashboard" element={
